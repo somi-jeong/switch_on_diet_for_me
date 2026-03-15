@@ -4,6 +4,12 @@ import { User, CheckCircle2, History, Bell, Calendar, ChevronRight, RotateCcw } 
 export default function MyScreen({ onNavigate }) {
   const [isDatePickerOpen, setIsDatePickerOpen] = useState(false);
   const [selectedDate, setSelectedDate] = useState('2026-03-12');
+  const [isResetDialogOpen, setIsResetDialogOpen] = useState(false);
+
+  const handleReset = () => {
+    setIsResetDialogOpen(false);
+    onNavigate('setup'); // Navigate to setup screen
+  };
 
   return (
     <>
@@ -89,11 +95,44 @@ export default function MyScreen({ onNavigate }) {
           </button>
         </div>
 
-        <button className="w-full py-4 text-slate-400 text-sm font-medium hover:text-rose-500 transition-colors flex items-center justify-center gap-1.5">
+        <button 
+          onClick={() => setIsResetDialogOpen(true)}
+          className="w-full py-4 text-slate-400 text-sm font-medium hover:text-rose-500 transition-colors flex items-center justify-center gap-1.5"
+        >
           <RotateCcw size={16} />
           데이터 초기화
         </button>
       </div>
+
+      {/* Reset Dialog */}
+      {isResetDialogOpen && (
+        <div className="absolute inset-0 z-50 flex items-center justify-center px-5">
+          <div className="absolute inset-0 bg-slate-900/40 backdrop-blur-sm" onClick={() => setIsResetDialogOpen(false)}></div>
+          <div className="bg-white rounded-3xl p-6 relative z-10 w-full max-w-sm shadow-2xl animate-[scaleIn_0.2s_ease-out]">
+            <div className="w-12 h-12 bg-rose-100 rounded-full flex items-center justify-center text-rose-500 mb-4 mx-auto">
+              <RotateCcw size={24} />
+            </div>
+            <h3 className="text-xl font-black text-slate-800 text-center mb-2">모든 기록을 지울까요?</h3>
+            <p className="text-sm text-slate-500 text-center mb-6">
+              지금까지 기록한 식단, 수면, 데일리 미션 데이터가 모두 삭제되며 복구할 수 없습니다. 처음부터 다시 시작하시겠어요?
+            </p>
+            <div className="flex gap-3">
+              <button 
+                onClick={() => setIsResetDialogOpen(false)}
+                className="flex-1 py-4 bg-slate-100 text-slate-600 rounded-2xl font-bold text-sm hover:bg-slate-200 transition-colors"
+              >
+                취소
+              </button>
+              <button 
+                onClick={handleReset}
+                className="flex-1 py-4 bg-rose-500 text-white rounded-2xl font-bold text-sm shadow-sm hover:bg-rose-600 transition-colors"
+              >
+                초기화하기
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Date Picker Bottom Sheet */}
       {isDatePickerOpen && (

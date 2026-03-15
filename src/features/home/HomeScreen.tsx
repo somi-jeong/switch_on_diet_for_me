@@ -1,5 +1,100 @@
 import React, { useState } from 'react';
-import { Calendar, Sun, Check, MessageCircle, Sparkles, GlassWater, Moon, Lock, AlertTriangle, CheckCircle2, Timer, Utensils, ChevronDown, MinusCircle } from 'lucide-react';
+import { Calendar, Sun, Check, MessageCircle, Sparkles, GlassWater, Moon, Lock, AlertTriangle, CheckCircle2, Timer, Utensils, ChevronDown, ChevronUp, MinusCircle, Pill, Activity } from 'lucide-react';
+
+const CustomTimePicker = ({ value, onChange, isWarning = false, warningColor = 'rose' }) => {
+  const [hour, setHour] = useState(parseInt(value.split(':')[0] || '07', 10));
+  const [minute, setMinute] = useState(parseInt(value.split(':')[1] || '00', 10));
+
+  const updateTime = (h, m) => {
+    const hh = h.toString().padStart(2, '0');
+    const mm = m.toString().padStart(2, '0');
+    onChange(`${hh}:${mm}`);
+  };
+
+  const handleHourChange = (delta) => {
+    const newHour = (hour + delta + 24) % 24;
+    setHour(newHour);
+    updateTime(newHour, minute);
+  };
+
+  const handleMinuteChange = (delta) => {
+    const newMinute = (minute + delta + 60) % 60;
+    setMinute(newMinute);
+    updateTime(hour, newMinute);
+  };
+
+  const isPM = hour >= 12;
+  const displayHour = hour % 12 === 0 ? 12 : hour % 12;
+
+  const handleAmPmToggle = (toPM) => {
+    if (toPM && !isPM) {
+      const newHour = hour + 12;
+      setHour(newHour);
+      updateTime(newHour, minute);
+    } else if (!toPM && isPM) {
+      const newHour = hour - 12;
+      setHour(newHour);
+      updateTime(newHour, minute);
+    }
+  };
+
+  const getWarningColors = () => {
+    if (warningColor === 'indigo') {
+      return {
+        bg: 'bg-indigo-100 text-indigo-700',
+        border: 'border-indigo-200',
+        text: 'text-indigo-600'
+      };
+    }
+    return {
+      bg: 'bg-rose-100 text-rose-700',
+      border: 'border-rose-200',
+      text: 'text-rose-600'
+    };
+  };
+
+  const colors = isWarning ? getWarningColors() : {
+    bg: 'bg-[#13ec92] text-slate-900',
+    border: 'border-[#13ec92]/30',
+    text: 'text-slate-800'
+  };
+
+  return (
+    <div className="flex items-center justify-center gap-3 my-6">
+      {/* AM/PM Toggle */}
+      <div className="flex flex-col gap-2">
+        <button 
+          onClick={() => handleAmPmToggle(false)}
+          className={`py-3 px-4 rounded-2xl font-bold transition-all ${!isPM ? `${colors.bg} shadow-sm scale-105` : 'bg-slate-100 text-slate-400 hover:bg-slate-200'}`}
+        >
+          오전
+        </button>
+        <button 
+          onClick={() => handleAmPmToggle(true)}
+          className={`py-3 px-4 rounded-2xl font-bold transition-all ${isPM ? `${colors.bg} shadow-sm scale-105` : 'bg-slate-100 text-slate-400 hover:bg-slate-200'}`}
+        >
+          오후
+        </button>
+      </div>
+
+      {/* Hour Picker */}
+      <div className={`flex flex-col items-center bg-slate-50 rounded-3xl p-2 w-20 border shadow-inner transition-colors ${colors.border}`}>
+        <button onClick={() => handleHourChange(1)} className="p-3 text-slate-400 hover:text-slate-600 active:scale-95 transition-transform"><ChevronUp size={24} /></button>
+        <div className={`text-4xl font-black py-2 w-full text-center ${colors.text}`}>{displayHour}</div>
+        <button onClick={() => handleHourChange(-1)} className="p-3 text-slate-400 hover:text-slate-600 active:scale-95 transition-transform"><ChevronDown size={24} /></button>
+      </div>
+
+      <div className="text-2xl font-black text-slate-300 pb-1">:</div>
+
+      {/* Minute Picker */}
+      <div className={`flex flex-col items-center bg-slate-50 rounded-3xl p-2 w-20 border shadow-inner transition-colors ${colors.border}`}>
+        <button onClick={() => handleMinuteChange(5)} className="p-3 text-slate-400 hover:text-slate-600 active:scale-95 transition-transform"><ChevronUp size={24} /></button>
+        <div className={`text-4xl font-black py-2 w-full text-center ${colors.text}`}>{minute.toString().padStart(2, '0')}</div>
+        <button onClick={() => handleMinuteChange(-5)} className="p-3 text-slate-400 hover:text-slate-600 active:scale-95 transition-transform"><ChevronDown size={24} /></button>
+      </div>
+    </div>
+  );
+};
 
 export default function HomeScreen({ onNavigate }) {
   const [isWokenUp, setIsWokenUp] = useState(true);
@@ -16,6 +111,31 @@ export default function HomeScreen({ onNavigate }) {
   const [todayBedtime, setTodayBedtime] = useState('23:30');
   const [isLateBedtimeWarningOpen, setIsLateBedtimeWarningOpen] = useState(false);
   const [pendingBedtimeAction, setPendingBedtimeAction] = useState(null);
+  const [dailyChecklist, setDailyChecklist] = useState({
+    water: false,
+    supplements: false,
+    workout: false,
+  });
+
+  // Calculate sleep duration
+  const getSleepDuration = (bedTimeStr, wakeTimeStr) => {
+    let [bH, bM] = bedTimeStr.split(':').map(Number);
+    let [wH, wM] = wakeTimeStr.split(':').map(Number);
+    let bedMins = bH * 60 + bM;
+    let wakeMins = wH * 60 + wM;
+    if (wakeMins < bedMins) wakeMins += 24 * 60;
+    let diff = wakeMins - bedMins;
+    let h = Math.floor(diff / 60);
+    let m = diff % 60;
+    return { h, m, totalMins: diff };
+  };
+
+  const sleepData = getSleepDuration('23:30', wakeTime); // Using mocked yesterday bedtime
+  const isSleepValid = sleepData.totalMins >= 360; // 6 hours
+
+  const toggleChecklist = (key) => {
+    setDailyChecklist(prev => ({ ...prev, [key]: !prev[key] }));
+  };
 
   const isTimeLate = (timeStr) => {
     return timeStr > '09:00' || timeStr < '05:00';
@@ -23,14 +143,6 @@ export default function HomeScreen({ onNavigate }) {
 
   const isBedtimeLate = (timeStr) => {
     return timeStr >= '00:00' && timeStr <= '05:00';
-  };
-
-  const getSleepDuration = (bed, wake) => {
-    const [bedH, bedM] = bed.split(':').map(Number);
-    const [wakeH, wakeM] = wake.split(':').map(Number);
-    let duration = (wakeH + wakeM / 60) - (bedH + bedM / 60);
-    if (duration < 0) duration += 24;
-    return duration;
   };
 
   const isCurrentLate = isTimeLate(mockCurrentTime);
@@ -163,6 +275,93 @@ export default function HomeScreen({ onNavigate }) {
             </>
           )}
         </section>
+
+        {/* Daily Checklist Section */}
+        {isWokenUp && (
+          <section className="px-5 py-4">
+            <h3 className="text-lg font-bold text-slate-800 mb-3">오늘의 데일리 미션</h3>
+            <div className="bg-white rounded-3xl p-5 shadow-sm border border-slate-100 space-y-4">
+              <button 
+                onClick={() => toggleChecklist('water')}
+                className="w-full flex items-center justify-between group"
+              >
+                <div className="flex items-center gap-3">
+                  <div className={`w-10 h-10 rounded-2xl flex items-center justify-center transition-colors ${dailyChecklist.water ? 'bg-blue-100 text-blue-500' : 'bg-slate-100 text-slate-400'}`}>
+                    <GlassWater size={20} />
+                  </div>
+                  <div className="text-left">
+                    <p className={`text-sm font-bold transition-colors ${dailyChecklist.water ? 'text-slate-800 line-through decoration-slate-300' : 'text-slate-700'}`}>물 2L 이상 마시기</p>
+                    <p className="text-xs text-slate-400">충분한 수분 섭취는 대사를 높여요</p>
+                  </div>
+                </div>
+                <div className={`w-6 h-6 rounded-full border-2 flex items-center justify-center transition-colors ${dailyChecklist.water ? 'bg-blue-500 border-blue-500 text-white' : 'border-slate-300 text-transparent group-hover:border-blue-300'}`}>
+                  <Check size={14} strokeWidth={3} />
+                </div>
+              </button>
+
+              <div className="w-full h-px bg-slate-100"></div>
+
+              <button 
+                onClick={() => toggleChecklist('supplements')}
+                className="w-full flex items-center justify-between group"
+              >
+                <div className="flex items-center gap-3">
+                  <div className={`w-10 h-10 rounded-2xl flex items-center justify-center transition-colors ${dailyChecklist.supplements ? 'bg-amber-100 text-amber-500' : 'bg-slate-100 text-slate-400'}`}>
+                    <Pill size={20} />
+                  </div>
+                  <div className="text-left">
+                    <p className={`text-sm font-bold transition-colors ${dailyChecklist.supplements ? 'text-slate-800 line-through decoration-slate-300' : 'text-slate-700'}`}>영양제 챙겨먹기</p>
+                    <p className="text-xs text-slate-400">유산균, 오메가3, 비타민 등</p>
+                  </div>
+                </div>
+                <div className={`w-6 h-6 rounded-full border-2 flex items-center justify-center transition-colors ${dailyChecklist.supplements ? 'bg-amber-500 border-amber-500 text-white' : 'border-slate-300 text-transparent group-hover:border-amber-300'}`}>
+                  <Check size={14} strokeWidth={3} />
+                </div>
+              </button>
+
+              <div className="w-full h-px bg-slate-100"></div>
+
+              <button 
+                onClick={() => toggleChecklist('workout')}
+                className="w-full flex items-center justify-between group"
+              >
+                <div className="flex items-center gap-3">
+                  <div className={`w-10 h-10 rounded-2xl flex items-center justify-center transition-colors ${dailyChecklist.workout ? 'bg-[#13ec92]/20 text-emerald-600' : 'bg-slate-100 text-slate-400'}`}>
+                    <Activity size={20} />
+                  </div>
+                  <div className="text-left">
+                    <p className={`text-sm font-bold transition-colors ${dailyChecklist.workout ? 'text-slate-800 line-through decoration-slate-300' : 'text-slate-700'}`}>고강도 운동하기</p>
+                    <p className="text-xs text-slate-400">주 4회 이상, 숨이 찰 정도로!</p>
+                  </div>
+                </div>
+                <div className={`w-6 h-6 rounded-full border-2 flex items-center justify-center transition-colors ${dailyChecklist.workout ? 'bg-[#13ec92] border-[#13ec92] text-slate-900' : 'border-slate-300 text-transparent group-hover:border-[#13ec92]'}`}>
+                  <Check size={14} strokeWidth={3} />
+                </div>
+              </button>
+
+              <div className="w-full h-px bg-slate-100"></div>
+
+              <div className="w-full flex items-center justify-between py-2">
+                <div className="flex items-center gap-3">
+                  <div className={`w-10 h-10 rounded-2xl flex items-center justify-center transition-colors ${isSleepValid ? 'bg-indigo-100 text-indigo-500' : 'bg-rose-100 text-rose-500'}`}>
+                    <Moon size={20} />
+                  </div>
+                  <div className="text-left">
+                    <p className={`text-sm font-bold ${isSleepValid ? 'text-slate-800' : 'text-rose-600'}`}>
+                      수면 {sleepData.h}시간 {sleepData.m}분 (자동 기록)
+                    </p>
+                    <p className="text-xs text-slate-400">
+                      {isSleepValid ? '최소 6시간 수면 달성! 🌙' : '수면 시간이 6시간 미만이에요 💦'}
+                    </p>
+                  </div>
+                </div>
+                <div className={`w-6 h-6 rounded-full border-2 flex items-center justify-center ${isSleepValid ? 'bg-indigo-500 border-indigo-500 text-white' : 'bg-rose-500 border-rose-500 text-white'}`}>
+                  {isSleepValid ? <Check size={14} strokeWidth={3} /> : <AlertTriangle size={14} strokeWidth={3} />}
+                </div>
+              </div>
+            </div>
+          </section>
+        )}
 
         <section className="px-5 py-6 relative">
           <div className="absolute left-[39px] top-10 bottom-10 w-0.5 bg-slate-200 z-0 rounded-full"></div>
@@ -373,6 +572,38 @@ export default function HomeScreen({ onNavigate }) {
               </div>
             </>
           )}
+
+          {/* AI Feedback Section (Today) */}
+          {isWokenUp && (
+            <div className="mt-8 mb-6">
+              <div className="bg-blue-50 border border-blue-100 rounded-3xl p-6 relative overflow-hidden shadow-sm">
+                <div className="absolute -right-10 -top-10 w-32 h-32 bg-blue-500/10 rounded-full blur-2xl"></div>
+                <div className="relative z-10">
+                  <div className="flex items-center justify-between mb-4">
+                    <div className="flex items-center gap-2">
+                      <Sparkles size={20} className="text-blue-600" />
+                      <h3 className="text-lg font-black text-blue-900">오늘의 AI 코치 피드백</h3>
+                    </div>
+                    <span className="text-[10px] font-black px-2.5 py-1.5 rounded-lg bg-blue-100 text-blue-700">
+                      보통 (일부 누락) 👍
+                    </span>
+                  </div>
+                  <p className="text-sm leading-relaxed text-blue-800 font-medium mb-4">
+                    오늘 기상 시간이 조금 늦었지만, 식단은 완벽하게 지켜주셨어요! 내일부터는 점심에 일반식이 허용됩니다.
+                  </p>
+                  
+                  <div className="pt-4 border-t border-blue-200/50">
+                    <p className="text-xs font-bold text-blue-700/70 mb-2">현재 놓치고 있는 규칙</p>
+                    <div className="flex flex-wrap gap-2">
+                      <span className="text-[11px] font-bold bg-white text-slate-600 px-3 py-1.5 rounded-lg shadow-sm border border-slate-100">
+                        기상 시간 지연
+                      </span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          )}
         </section>
 
         {/* AI Chat FAB - Made more prominent and absolute positioning */}
@@ -424,14 +655,13 @@ export default function HomeScreen({ onNavigate }) {
               )}
 
               {!isTimeLate(wakeTime) && getSleepDuration(missedBedtime, wakeTime) >= 6 && (
-                <p className="text-sm text-slate-500 mb-6">기상 시간에 맞춰 오늘의 식단 알림이 재조정됩니다.</p>
+                <p className="text-sm text-slate-500 mb-6 text-center">기상 시간에 맞춰 오늘의 식단 알림이 재조정됩니다.</p>
               )}
               
-              <input 
-                type="time" 
-                value={wakeTime}
-                onChange={(e) => setWakeTime(e.target.value)}
-                className={`w-full bg-slate-50 border rounded-2xl p-4 text-2xl font-black text-center mb-6 focus:outline-none transition-colors ${isTimeLate(wakeTime) ? 'border-rose-300 text-rose-600 focus:border-rose-500 focus:bg-rose-50' : 'border-slate-200 text-slate-700 focus:border-[#13ec92] focus:bg-white'}`}
+              <CustomTimePicker 
+                value={wakeTime} 
+                onChange={setWakeTime} 
+                isWarning={isTimeLate(wakeTime)} 
               />
               
               <div className="flex gap-3">
@@ -544,14 +774,14 @@ export default function HomeScreen({ onNavigate }) {
                   </p>
                 </div>
               ) : (
-                <p className="text-sm text-slate-500 mb-6">어제 밤 몇 시에 주무셨나요?</p>
+                <p className="text-sm text-slate-500 mb-6 text-center">어제 밤 몇 시에 주무셨나요?</p>
               )}
               
-              <input 
-                type="time" 
-                value={missedBedtime}
-                onChange={(e) => setMissedBedtime(e.target.value)}
-                className={`w-full bg-slate-50 border rounded-2xl p-4 text-2xl font-black text-center mb-6 focus:outline-none transition-colors ${isBedtimeLate(missedBedtime) ? 'border-indigo-300 text-indigo-600 focus:border-indigo-500 focus:bg-indigo-50/50' : 'border-slate-200 text-slate-700 focus:border-indigo-400 focus:bg-white'}`}
+              <CustomTimePicker 
+                value={missedBedtime} 
+                onChange={setMissedBedtime} 
+                isWarning={isBedtimeLate(missedBedtime)} 
+                warningColor="indigo"
               />
               
               <div className="flex gap-3">
@@ -598,14 +828,14 @@ export default function HomeScreen({ onNavigate }) {
                   </p>
                 </div>
               ) : (
-                <p className="text-sm text-slate-500 mb-6">오늘 밤 몇 시에 주무실 예정인가요?</p>
+                <p className="text-sm text-slate-500 mb-6 text-center">오늘 밤 몇 시에 주무실 예정인가요?</p>
               )}
               
-              <input 
-                type="time" 
-                value={todayBedtime}
-                onChange={(e) => setTodayBedtime(e.target.value)}
-                className={`w-full bg-slate-50 border rounded-2xl p-4 text-2xl font-black text-center mb-6 focus:outline-none transition-colors ${isBedtimeLate(todayBedtime) ? 'border-indigo-300 text-indigo-600 focus:border-indigo-500 focus:bg-indigo-50/50' : 'border-slate-200 text-slate-700 focus:border-indigo-400 focus:bg-white'}`}
+              <CustomTimePicker 
+                value={todayBedtime} 
+                onChange={setTodayBedtime} 
+                isWarning={isBedtimeLate(todayBedtime)} 
+                warningColor="indigo"
               />
               
               <div className="flex gap-3">

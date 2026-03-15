@@ -1,5 +1,5 @@
 import React from 'react';
-import { ChevronLeft, Calendar as CalendarIcon, Moon, Sun, CheckCircle2, AlertTriangle, Utensils, MinusCircle } from 'lucide-react';
+import { ChevronLeft, Calendar as CalendarIcon, Moon, Sun, CheckCircle2, AlertTriangle, Utensils, MinusCircle, GlassWater, Pill, Activity } from 'lucide-react';
 
 export default function DietHistoryScreen({ onBack }) {
   const historyData = [
@@ -9,6 +9,7 @@ export default function DietHistoryScreen({ onBack }) {
       wakeUp: '13:00',
       bedtime: '02:00',
       fasting: '11h 00m',
+      rules: { water: true, supplements: true, workout: true, sleep: { h: 6, m: 45, valid: true } },
       meals: [
         { type: '아침', time: '-', status: 'skipped', text: '기상 지연으로 스킵' },
         { type: '점심', time: '13:30', status: 'good', text: '단백질 쉐이크' },
@@ -22,6 +23,7 @@ export default function DietHistoryScreen({ onBack }) {
       wakeUp: '07:15',
       bedtime: '23:30',
       fasting: '14h 15m',
+      rules: { water: true, supplements: false, workout: false, sleep: { h: 5, m: 10, valid: false } },
       meals: [
         { type: '아침', time: '08:00', status: 'good', text: '단백질 쉐이크' },
         { type: '점심', time: '12:30', status: 'violation', text: '단백질 쉐이크 + 떡볶이' },
@@ -35,6 +37,7 @@ export default function DietHistoryScreen({ onBack }) {
       wakeUp: '06:30',
       bedtime: '22:45',
       fasting: '15h 45m',
+      rules: { water: true, supplements: true, workout: true, sleep: { h: 7, m: 30, valid: true } },
       meals: [
         { type: '아침', time: '07:30', status: 'good', text: '단백질 쉐이크' },
         { type: '점심', time: '12:00', status: 'good', text: '단백질 쉐이크' },
@@ -69,7 +72,7 @@ export default function DietHistoryScreen({ onBack }) {
             </div>
 
             {/* Sleep & Wake */}
-            <div className="flex gap-2 mb-6">
+            <div className="flex gap-2 mb-4">
               <div className="flex-1 bg-slate-50 rounded-2xl p-3 border border-slate-100 flex items-center gap-3">
                 <div className="w-8 h-8 rounded-full bg-amber-100 flex items-center justify-center text-amber-500">
                   <Sun size={16} />
@@ -89,6 +92,34 @@ export default function DietHistoryScreen({ onBack }) {
                 </div>
               </div>
             </div>
+
+            {/* Daily Rules */}
+            {dayData.rules && (
+              <div className="mb-6">
+                <h4 className="text-xs font-bold text-slate-500 flex items-center gap-1.5 mb-2">
+                  <CheckCircle2 size={14} />
+                  데일리 미션 달성도
+                </h4>
+                <div className="flex gap-2">
+                  <div className={`flex-1 flex flex-col items-center justify-center py-2 rounded-xl border ${dayData.rules.water ? 'bg-blue-50 border-blue-100 text-blue-600' : 'bg-slate-50 border-slate-100 text-slate-400'}`}>
+                    <GlassWater size={16} className="mb-1" />
+                    <span className="text-[10px] font-bold">물 2L</span>
+                  </div>
+                  <div className={`flex-1 flex flex-col items-center justify-center py-2 rounded-xl border ${dayData.rules.supplements ? 'bg-amber-50 border-amber-100 text-amber-600' : 'bg-slate-50 border-slate-100 text-slate-400'}`}>
+                    <Pill size={16} className="mb-1" />
+                    <span className="text-[10px] font-bold">영양제</span>
+                  </div>
+                  <div className={`flex-1 flex flex-col items-center justify-center py-2 rounded-xl border ${dayData.rules.workout ? 'bg-[#13ec92]/10 border-[#13ec92]/30 text-emerald-600' : 'bg-slate-50 border-slate-100 text-slate-400'}`}>
+                    <Activity size={16} className="mb-1" />
+                    <span className="text-[10px] font-bold">운동</span>
+                  </div>
+                  <div className={`flex-1 flex flex-col items-center justify-center py-2 rounded-xl border ${dayData.rules.sleep.valid ? 'bg-indigo-50 border-indigo-100 text-indigo-600' : 'bg-rose-50 border-rose-100 text-rose-500'}`}>
+                    <Moon size={16} className="mb-1" />
+                    <span className="text-[10px] font-bold">{dayData.rules.sleep.h}h {dayData.rules.sleep.m}m</span>
+                  </div>
+                </div>
+              </div>
+            )}
 
             {/* Meals */}
             <div className="space-y-3">

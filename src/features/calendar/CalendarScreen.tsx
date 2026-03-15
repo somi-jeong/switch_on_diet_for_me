@@ -1,8 +1,15 @@
 import React, { useState } from 'react';
-import { Check, Plus, AlertCircle, Utensils, MinusCircle } from 'lucide-react';
+import { Check, Plus, AlertCircle, Utensils, MinusCircle, Sparkles, GlassWater, Pill, Activity, Moon } from 'lucide-react';
 
 export default function CalendarScreen({ onNavigate }) {
   const [selectedDay, setSelectedDay] = useState(4);
+
+  // 다이어트 시작일 설정 (예: 2026년 3월 13일 금요일)
+  const startDate = new Date('2026-03-13T00:00:00');
+  const startDayOfWeek = startDate.getDay(); // 0: 일, 1: 월, ..., 5: 금, 6: 토
+
+  // 캘린더 앞부분 빈 칸 (시작 요일 맞추기)
+  const paddingDays = Array.from({ length: startDayOfWeek }, (_, i) => null);
 
   const days = Array.from({ length: 28 }, (_, i) => {
     const dayNum = i + 1;
@@ -12,6 +19,8 @@ export default function CalendarScreen({ onNavigate }) {
     if (dayNum === 4) return 'today';
     return 'future';
   });
+
+  const calendarCells = [...paddingDays, ...days];
 
   const mockMeals = {
     1: [
@@ -40,7 +49,42 @@ export default function CalendarScreen({ onNavigate }) {
     ]
   };
 
+  const mockFeedback = {
+    1: { 
+      title: '1일차 데일리 총평', 
+      text: '첫날 식단을 완벽하게 지키셨네요! 공복 시간 14시간도 잘 유지하셨습니다. 이대로만 쭉 가볼까요?', 
+      type: 'good',
+      status: 'perfect', // perfect, normal, worst
+      missed: []
+    },
+    2: { 
+      title: '2일차 데일리 총평', 
+      text: '점심에 떡볶이를 드셨군요 😭 탄수화물은 인슐린 분비를 자극해 지방 대사를 방해합니다. 내일은 꼭 쉐이크를 드셔주세요!', 
+      type: 'warning',
+      status: 'worst',
+      missed: ['식단 (금기식품 섭취)', '영양제', '운동', '수면 (6시간 미만)']
+    },
+    3: { 
+      title: '3일차 데일리 총평', 
+      text: '오늘 기상 시간이 조금 늦었지만, 식단은 완벽하게 지켜주셨어요! 내일부터는 점심에 일반식이 허용됩니다.', 
+      type: 'good',
+      status: 'normal',
+      missed: ['기상 시간 지연']
+    },
+    4: null
+  };
+
   const currentMeals = mockMeals[selectedDay] || [];
+  const currentFeedback = mockFeedback[selectedDay];
+
+  const getDailyRules = (day) => {
+    if (day === 1) return { water: true, supplements: true, workout: true, sleep: { h: 7, m: 30, valid: true } };
+    if (day === 2) return { water: true, supplements: false, workout: false, sleep: { h: 5, m: 10, valid: false } };
+    if (day === 3) return { water: true, supplements: true, workout: true, sleep: { h: 6, m: 45, valid: true } };
+    if (day === 4) return { water: false, supplements: false, workout: false, sleep: { h: 7, m: 30, valid: true } }; // Today
+    return null;
+  };
+  const currentRules = getDailyRules(selectedDay);
 
   return (
     <div className="h-full overflow-y-auto hide-scrollbar px-5 py-8 pb-32">
@@ -78,24 +122,33 @@ export default function CalendarScreen({ onNavigate }) {
           ))}
         </div>
         <div className="grid grid-cols-7 gap-2">
-          {days.map((status, i) => {
-            const dayNum = i + 1;
+          {calendarCells.map((status, i) => {
+            if (status === null) {
+              return <div key={`padding-${i}`} className="relative aspect-square"></div>;
+            }
+
+            const dayNum = i - startDayOfWeek + 1;
             const isSelected = selectedDay === dayNum;
             
-            let btnClass = "relative aspect-square rounded-xl flex items-center justify-center text-sm transition-all ";
+            // 실제 날짜 계산
+            const currentDate = new Date(startDate);
+            currentDate.setDate(startDate.getDate() + dayNum - 1);
+            const dateNum = currentDate.getDate();
+            
+            let btnClass = "relative aspect-square rounded-xl flex flex-col items-center justify-center transition-all ";
             
             if (isSelected) {
               btnClass += "ring-2 ring-offset-2 ring-[#13ec92] ";
             }
 
             if (status === 'done') {
-              btnClass += "bg-[#13ec92] text-slate-900 font-bold shadow-sm";
+              btnClass += "bg-[#13ec92] text-slate-900 shadow-sm";
             } else if (status === 'warning') {
-              btnClass += "bg-rose-100 text-rose-600 font-bold shadow-sm";
+              btnClass += "bg-rose-100 text-rose-600 shadow-sm";
             } else if (status === 'incomplete') {
-              btnClass += "bg-amber-100 text-amber-700 font-bold shadow-sm";
+              btnClass += "bg-amber-100 text-amber-700 shadow-sm";
             } else if (status === 'today') {
-              btnClass += "bg-white border-2 border-[#13ec92] text-[#13ec92] font-black shadow-sm scale-110 z-10";
+              btnClass += "bg-white border-2 border-[#13ec92] text-[#13ec92] shadow-sm scale-110 z-10";
             } else {
               btnClass += "bg-slate-50 border border-slate-100 text-slate-400";
             }
@@ -106,7 +159,10 @@ export default function CalendarScreen({ onNavigate }) {
                 onClick={() => setSelectedDay(dayNum)}
                 className={btnClass}
               >
-                {status === 'done' ? <Check size={16} strokeWidth={3} /> : dayNum}
+                <span className={`text-[9px] mb-0.5 ${status === 'today' ? 'font-black' : 'font-medium opacity-70'}`}>{dayNum}일차</span>
+                <span className={`text-sm ${status === 'today' ? 'font-black' : 'font-bold'}`}>
+                  {status === 'done' ? <Check size={16} strokeWidth={3} /> : dateNum}
+                </span>
                 {status === 'warning' && (
                   <div className="absolute -top-1 -right-1 w-3 h-3 bg-rose-500 rounded-full border-2 border-white"></div>
                 )}
@@ -191,6 +247,87 @@ export default function CalendarScreen({ onNavigate }) {
               </div>
             ))}
           </div>
+
+          {/* Daily Rules Section */}
+          {currentRules && (
+            <div className="mt-6 mb-4">
+              <h4 className="font-bold text-sm text-slate-800 mb-3">데일리 규칙 달성도</h4>
+              <div className="flex gap-2">
+                <div className={`flex-1 flex flex-col items-center justify-center py-3 rounded-2xl border ${currentRules.water ? 'bg-blue-50 border-blue-100 text-blue-600' : 'bg-slate-50 border-slate-100 text-slate-400'}`}>
+                  <GlassWater size={20} className="mb-1" />
+                  <span className="text-[10px] font-bold">물 2L</span>
+                </div>
+                <div className={`flex-1 flex flex-col items-center justify-center py-3 rounded-2xl border ${currentRules.supplements ? 'bg-amber-50 border-amber-100 text-amber-600' : 'bg-slate-50 border-slate-100 text-slate-400'}`}>
+                  <Pill size={20} className="mb-1" />
+                  <span className="text-[10px] font-bold">영양제</span>
+                </div>
+                <div className={`flex-1 flex flex-col items-center justify-center py-3 rounded-2xl border ${currentRules.workout ? 'bg-[#13ec92]/10 border-[#13ec92]/30 text-emerald-600' : 'bg-slate-50 border-slate-100 text-slate-400'}`}>
+                  <Activity size={20} className="mb-1" />
+                  <span className="text-[10px] font-bold">운동</span>
+                </div>
+                <div className={`flex-1 flex flex-col items-center justify-center py-3 rounded-2xl border ${currentRules.sleep.valid ? 'bg-indigo-50 border-indigo-100 text-indigo-600' : 'bg-rose-50 border-rose-100 text-rose-500'}`}>
+                  <Moon size={20} className="mb-1" />
+                  <span className="text-[10px] font-bold">{currentRules.sleep.h}h {currentRules.sleep.m}m</span>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* AI Feedback Section */}
+          {currentFeedback && (
+            <div className={`mt-6 p-5 rounded-2xl border ${
+              currentFeedback.status === 'perfect' ? 'bg-[#13ec92]/10 border-[#13ec92]/30' : 
+              currentFeedback.status === 'normal' ? 'bg-blue-50 border-blue-100' : 
+              'bg-rose-50 border-rose-100'
+            }`}>
+              <div className="flex items-center justify-between mb-3">
+                <div className="flex items-center gap-2">
+                  <Sparkles size={16} className={
+                    currentFeedback.status === 'perfect' ? 'text-emerald-600' : 
+                    currentFeedback.status === 'normal' ? 'text-blue-600' : 
+                    'text-rose-500'
+                  } />
+                  <h4 className={`font-bold text-sm ${
+                    currentFeedback.status === 'perfect' ? 'text-emerald-800' : 
+                    currentFeedback.status === 'normal' ? 'text-blue-800' : 
+                    'text-rose-700'
+                  }`}>
+                    AI 코치 피드백
+                  </h4>
+                </div>
+                <span className={`text-[10px] font-black px-2 py-1 rounded-md ${
+                  currentFeedback.status === 'perfect' ? 'bg-emerald-100 text-emerald-700' : 
+                  currentFeedback.status === 'normal' ? 'bg-blue-100 text-blue-700' : 
+                  'bg-rose-100 text-rose-700'
+                }`}>
+                  {currentFeedback.status === 'perfect' ? '완벽 성공 🌟' : 
+                   currentFeedback.status === 'normal' ? '보통 (일부 누락) 👍' : 
+                   '최악 (다수 위반) 🚨'}
+                </span>
+              </div>
+              
+              <p className={`text-sm leading-relaxed mb-3 ${
+                currentFeedback.status === 'perfect' ? 'text-emerald-700' : 
+                currentFeedback.status === 'normal' ? 'text-blue-700' : 
+                'text-rose-600'
+              }`}>
+                {currentFeedback.text}
+              </p>
+
+              {currentFeedback.missed && currentFeedback.missed.length > 0 && (
+                <div className="mt-3 pt-3 border-t border-black/5">
+                  <p className="text-xs font-bold text-slate-600 mb-2">놓친 규칙</p>
+                  <div className="flex flex-wrap gap-1.5">
+                    {currentFeedback.missed.map((item, idx) => (
+                      <span key={idx} className="text-[10px] font-bold bg-white text-slate-500 px-2 py-1 rounded-md border border-slate-200">
+                        {item}
+                      </span>
+                    ))}
+                  </div>
+                </div>
+              )}
+            </div>
+          )}
         </div>
       )}
 
