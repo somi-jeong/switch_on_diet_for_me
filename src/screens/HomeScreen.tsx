@@ -12,6 +12,10 @@ export default function HomeScreen({ onNavigate }) {
   const [hasMissedBedtime, setHasMissedBedtime] = useState(true);
   const [isMissedBedtimeModalOpen, setIsMissedBedtimeModalOpen] = useState(false);
   const [missedBedtime, setMissedBedtime] = useState('02:00'); // 기본값을 늦은 시간으로 설정하여 테스트 용이하게 함
+  const [isTodayBedtimeModalOpen, setIsTodayBedtimeModalOpen] = useState(false);
+  const [todayBedtime, setTodayBedtime] = useState('23:30');
+  const [isLateBedtimeWarningOpen, setIsLateBedtimeWarningOpen] = useState(false);
+  const [pendingBedtimeAction, setPendingBedtimeAction] = useState(null);
 
   const isTimeLate = (timeStr) => {
     return timeStr > '09:00' || timeStr < '05:00';
@@ -359,7 +363,7 @@ export default function HomeScreen({ onNavigate }) {
                     <div className="absolute top-0 right-0 w-32 h-32 bg-gradient-to-br from-indigo-100/50 to-transparent rounded-bl-full"></div>
                     <div className="relative z-10">
                       <p className="text-sm font-semibold text-slate-700 mb-4">충분한 수면은 필수!<br/>밤 12시 이전 취침을 권장해요.</p>
-                      <button onClick={() => onNavigate('record')} className="w-full bg-indigo-50 hover:bg-indigo-100 text-indigo-600 font-bold py-3 rounded-2xl flex items-center justify-center gap-1.5 transition-transform active:scale-95 text-sm">
+                      <button onClick={() => setIsTodayBedtimeModalOpen(true)} className="w-full bg-indigo-50 hover:bg-indigo-100 text-indigo-600 font-bold py-3 rounded-2xl flex items-center justify-center gap-1.5 transition-transform active:scale-95 text-sm">
                         <Check size={16} />
                         취침 기록하기
                       </button>
@@ -553,9 +557,103 @@ export default function HomeScreen({ onNavigate }) {
               <div className="flex gap-3">
                 <button onClick={() => setIsMissedBedtimeModalOpen(false)} className="flex-1 py-4 bg-slate-100 text-slate-600 rounded-2xl font-bold text-sm">취소</button>
                 <button onClick={() => {
-                  setHasMissedBedtime(false);
-                  setIsMissedBedtimeModalOpen(false);
+                  if (isBedtimeLate(missedBedtime)) {
+                    setPendingBedtimeAction(() => () => {
+                      setHasMissedBedtime(false);
+                      setIsMissedBedtimeModalOpen(false);
+                    });
+                    setIsLateBedtimeWarningOpen(true);
+                  } else {
+                    setHasMissedBedtime(false);
+                    setIsMissedBedtimeModalOpen(false);
+                  }
                 }} className="flex-[2] py-4 bg-indigo-500 text-white rounded-2xl font-bold text-sm shadow-sm">기록 완료</button>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Today Bedtime Modal */}
+        {isTodayBedtimeModalOpen && (
+          <div className="absolute inset-0 z-50 flex flex-col justify-end">
+            <div 
+              className="absolute inset-0 bg-slate-900/40 backdrop-blur-sm transition-opacity" 
+              onClick={() => setIsTodayBedtimeModalOpen(false)}
+            ></div>
+            <div className="bg-white rounded-t-3xl p-6 relative z-10 shadow-2xl animate-[slideUp_0.3s_ease-out]">
+              <div className="w-12 h-1.5 bg-slate-200 rounded-full mx-auto mb-6"></div>
+              <div className="flex items-center gap-2 mb-2">
+                <Moon size={20} className="text-indigo-500" />
+                <h3 className="text-xl font-black text-slate-800">오늘 취침 시간 기록</h3>
+              </div>
+              
+              {isBedtimeLate(todayBedtime) ? (
+                <div className="bg-indigo-50 rounded-2xl p-4 mb-6 border border-indigo-100">
+                  <div className="flex items-center gap-2 mb-2">
+                    <AlertTriangle size={16} className="text-indigo-500" />
+                    <span className="font-bold text-indigo-700 text-sm">지방 분해 골든타임 놓침</span>
+                  </div>
+                  <p className="text-xs text-indigo-600 leading-relaxed">
+                    자정~새벽 4시는 살이 빠지는 핵심 시간이에요. 너무 늦게 주무시면 식욕 억제 호르몬이 줄어들어요 😭
+                  </p>
+                </div>
+              ) : (
+                <p className="text-sm text-slate-500 mb-6">오늘 밤 몇 시에 주무실 예정인가요?</p>
+              )}
+              
+              <input 
+                type="time" 
+                value={todayBedtime}
+                onChange={(e) => setTodayBedtime(e.target.value)}
+                className={`w-full bg-slate-50 border rounded-2xl p-4 text-2xl font-black text-center mb-6 focus:outline-none transition-colors ${isBedtimeLate(todayBedtime) ? 'border-indigo-300 text-indigo-600 focus:border-indigo-500 focus:bg-indigo-50/50' : 'border-slate-200 text-slate-700 focus:border-indigo-400 focus:bg-white'}`}
+              />
+              
+              <div className="flex gap-3">
+                <button onClick={() => setIsTodayBedtimeModalOpen(false)} className="flex-1 py-4 bg-slate-100 text-slate-600 rounded-2xl font-bold text-sm">취소</button>
+                <button onClick={() => {
+                  if (isBedtimeLate(todayBedtime)) {
+                    setPendingBedtimeAction(() => () => {
+                      setIsTodayBedtimeModalOpen(false);
+                      // 추가적인 취침 완료 로직이 있다면 여기에 작성
+                    });
+                    setIsLateBedtimeWarningOpen(true);
+                  } else {
+                    setIsTodayBedtimeModalOpen(false);
+                  }
+                }} className="flex-[2] py-4 bg-indigo-500 text-white rounded-2xl font-bold text-sm shadow-sm">기록 완료</button>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Late Bedtime Warning Alert Dialog */}
+        {isLateBedtimeWarningOpen && (
+          <div className="absolute inset-0 z-[60] flex items-center justify-center px-5">
+            <div className="absolute inset-0 bg-slate-900/60 backdrop-blur-sm transition-opacity" onClick={() => setIsLateBedtimeWarningOpen(false)}></div>
+            <div className="bg-white rounded-3xl p-6 relative z-10 shadow-2xl w-full max-w-sm animate-[scaleIn_0.2s_ease-out]">
+              <div className="w-14 h-14 rounded-full bg-rose-50 text-rose-500 flex items-center justify-center mb-4 mx-auto">
+                <AlertTriangle size={28} />
+              </div>
+              <h3 className="text-xl font-black text-slate-800 mb-3 text-center">정말 이 시간에 주무셨나요? 🚨</h3>
+              <p className="text-sm text-slate-600 mb-4 leading-relaxed text-center">
+                스위치온 다이어트에서 <strong>수면은 식단만큼 중요</strong>합니다.
+              </p>
+              <div className="bg-slate-50 rounded-2xl p-4 mb-6 text-xs text-slate-500 leading-relaxed">
+                자정부터 새벽 4시 사이에는 <strong>지방 분해 호르몬</strong>이 가장 활발하게 분비됩니다.<br/><br/>
+                이 시간을 놓치면 다음 날 <strong>가짜 배고픔</strong>이 심해지고 다이어트 효율이 급격히 떨어집니다. 내일은 꼭 자정 전에 주무셔야 해요!
+              </div>
+              <div className="flex flex-col gap-2">
+                <button onClick={() => {
+                  setIsLateBedtimeWarningOpen(false);
+                  if (pendingBedtimeAction) pendingBedtimeAction();
+                }} className="w-full py-3.5 bg-rose-500 text-white rounded-xl font-bold text-sm shadow-sm">
+                  네, 명심할게요 (기록 완료)
+                </button>
+                <button onClick={() => {
+                  setIsLateBedtimeWarningOpen(false);
+                }} className="w-full py-3.5 bg-slate-100 text-slate-600 rounded-xl font-bold text-sm">
+                  시간 다시 입력하기
+                </button>
               </div>
             </div>
           </div>
