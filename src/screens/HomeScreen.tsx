@@ -1,8 +1,11 @@
 import React, { useState } from 'react';
-import { Calendar, Sun, Check, MessageCircle, Sparkles, GlassWater, Moon, Lock, AlertTriangle, CheckCircle2, Timer, Utensils } from 'lucide-react';
+import { Calendar, Sun, Check, MessageCircle, Sparkles, GlassWater, Moon, Lock, AlertTriangle, CheckCircle2, Timer, Utensils, ChevronDown } from 'lucide-react';
 
 export default function HomeScreen({ onNavigate }) {
   const [isWokenUp, setIsWokenUp] = useState(true);
+  const [isWakeTimeModalOpen, setIsWakeTimeModalOpen] = useState(false);
+  const [wakeTime, setWakeTime] = useState('07:00');
+  const [isSkipDialogOpen, setIsSkipDialogOpen] = useState(false);
 
   return (
     <>
@@ -39,10 +42,11 @@ export default function HomeScreen({ onNavigate }) {
                 <div className="relative z-10">
                   <h2 className="text-xl font-bold mb-1">위장관 휴식 기간 🌿</h2>
                   <p className="text-sm text-slate-500 mb-4">오늘은 단백질 쉐이크만<br/>하루 4번 먹는 날이에요.</p>
-                  <div className="inline-flex items-center gap-1.5 bg-slate-50 border border-slate-100 px-3 py-2 rounded-2xl">
+                  <button onClick={() => setIsWakeTimeModalOpen(true)} className="inline-flex items-center gap-1.5 bg-slate-50 border border-slate-100 px-3 py-2 rounded-2xl hover:bg-slate-100 transition-colors active:scale-95">
                     <Sun size={18} className="text-amber-500" />
-                    <span className="text-sm font-bold text-slate-700">기상 07:00</span>
-                  </div>
+                    <span className="text-sm font-bold text-slate-700">기상 {wakeTime}</span>
+                    <ChevronDown size={14} className="text-slate-400" />
+                  </button>
                 </div>
                 <div className="relative w-20 h-20 flex-shrink-0 z-10">
                   <svg className="w-full h-full transform -rotate-90" viewBox="0 0 36 36">
@@ -125,9 +129,12 @@ export default function HomeScreen({ onNavigate }) {
                       <h3 className="text-lg font-bold text-slate-800">아침</h3>
                       <span className="text-sm font-bold text-[#13ec92]">07:30</span>
                     </div>
-                    <div className="flex items-center gap-1 bg-emerald-50 text-emerald-600 px-2 py-0.5 rounded text-[10px] font-bold border border-emerald-100">
-                      <CheckCircle2 size={12} />
-                      허용
+                    <div className="flex items-center gap-2">
+                      <button onClick={() => onNavigate('record')} className="text-[11px] font-bold text-slate-400 hover:text-slate-600 underline underline-offset-2">수정</button>
+                      <div className="flex items-center gap-1 bg-emerald-50 text-emerald-600 px-2 py-0.5 rounded text-[10px] font-bold border border-emerald-100">
+                        <CheckCircle2 size={12} />
+                        허용
+                      </div>
                     </div>
                   </div>
                   <div className="bg-white rounded-3xl p-4 shadow-sm border border-slate-100">
@@ -168,9 +175,12 @@ export default function HomeScreen({ onNavigate }) {
                       <h3 className="text-lg font-bold text-slate-800">점심</h3>
                       <span className="text-sm font-bold text-[#13ec92]">12:45</span>
                     </div>
-                    <div className="flex items-center gap-1 bg-amber-50 text-amber-600 px-2 py-0.5 rounded text-[10px] font-bold border border-amber-100">
-                      <AlertTriangle size={12} />
-                      주의
+                    <div className="flex items-center gap-2">
+                      <button onClick={() => onNavigate('record')} className="text-[11px] font-bold text-slate-400 hover:text-slate-600 underline underline-offset-2">수정</button>
+                      <div className="flex items-center gap-1 bg-amber-50 text-amber-600 px-2 py-0.5 rounded text-[10px] font-bold border border-amber-100">
+                        <AlertTriangle size={12} />
+                        주의
+                      </div>
                     </div>
                   </div>
                   <div className="bg-white rounded-3xl p-4 shadow-sm border border-slate-100">
@@ -220,7 +230,7 @@ export default function HomeScreen({ onNavigate }) {
                           <Check size={16} />
                           기록하기
                         </button>
-                        <button className="px-4 bg-slate-100 hover:bg-slate-200 text-slate-500 font-bold py-3 rounded-2xl flex items-center justify-center transition-transform active:scale-95 text-sm">
+                        <button onClick={() => setIsSkipDialogOpen(true)} className="px-4 bg-slate-100 hover:bg-slate-200 text-slate-500 font-bold py-3 rounded-2xl flex items-center justify-center transition-transform active:scale-95 text-sm">
                           스킵
                         </button>
                       </div>
@@ -270,6 +280,56 @@ export default function HomeScreen({ onNavigate }) {
             <MessageCircle size={28} />
             <span className="absolute top-0 right-0 w-4 h-4 bg-rose-500 border-2 border-slate-900 rounded-full"></span>
           </button>
+        )}
+
+        {/* Wake-up Time Edit Modal */}
+        {isWakeTimeModalOpen && (
+          <div className="absolute inset-0 z-50 flex flex-col justify-end">
+            <div 
+              className="absolute inset-0 bg-slate-900/40 backdrop-blur-sm transition-opacity" 
+              onClick={() => setIsWakeTimeModalOpen(false)}
+            ></div>
+            <div className="bg-white rounded-t-3xl p-6 relative z-10 shadow-2xl animate-[slideUp_0.3s_ease-out]">
+              <div className="w-12 h-1.5 bg-slate-200 rounded-full mx-auto mb-6"></div>
+              <h3 className="text-xl font-black text-slate-800 mb-2">기상 시간 수정</h3>
+              <p className="text-sm text-slate-500 mb-6">기상 시간에 맞춰 오늘의 식단 알림이 재조정됩니다.</p>
+              
+              <input 
+                type="time" 
+                value={wakeTime}
+                onChange={(e) => setWakeTime(e.target.value)}
+                className="w-full bg-slate-50 border border-slate-200 rounded-2xl p-4 text-2xl font-black text-slate-700 mb-6 focus:outline-none focus:border-[#13ec92] focus:bg-white transition-colors text-center"
+              />
+              
+              <div className="flex gap-3">
+                <button onClick={() => setIsWakeTimeModalOpen(false)} className="flex-1 py-4 bg-slate-100 text-slate-600 rounded-2xl font-bold text-sm">취소</button>
+                <button onClick={() => setIsWakeTimeModalOpen(false)} className="flex-[2] py-4 bg-[#13ec92] text-slate-900 rounded-2xl font-bold text-sm shadow-sm">수정 완료</button>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Skip Warning Dialog */}
+        {isSkipDialogOpen && (
+          <div className="absolute inset-0 z-50 flex items-center justify-center px-5">
+            <div 
+              className="absolute inset-0 bg-slate-900/40 backdrop-blur-sm transition-opacity" 
+              onClick={() => setIsSkipDialogOpen(false)}
+            ></div>
+            <div className="bg-white rounded-3xl p-6 relative z-10 shadow-2xl w-full max-w-sm animate-[scaleIn_0.2s_ease-out]">
+              <div className="w-14 h-14 rounded-full bg-rose-50 text-rose-500 flex items-center justify-center mb-4 mx-auto">
+                <AlertTriangle size={28} />
+              </div>
+              <h3 className="text-xl font-black text-slate-800 mb-3 text-center">정말 스킵하시겠어요?</h3>
+              <p className="text-sm text-slate-500 mb-6 leading-relaxed text-center">
+                1주차에는 4번의 단백질 쉐이크를 규칙적으로 섭취하여 근손실을 막는 것이 매우 중요해요.<br/>가급적 섭취하시는 것을 권장합니다!
+              </p>
+              <div className="flex gap-3">
+                <button onClick={() => setIsSkipDialogOpen(false)} className="flex-1 py-3.5 bg-slate-100 text-slate-600 rounded-xl font-bold text-sm">취소</button>
+                <button onClick={() => setIsSkipDialogOpen(false)} className="flex-1 py-3.5 bg-rose-500 text-white rounded-xl font-bold text-sm shadow-sm">스킵하기</button>
+              </div>
+            </div>
+          </div>
         )}
       </div>
     </>

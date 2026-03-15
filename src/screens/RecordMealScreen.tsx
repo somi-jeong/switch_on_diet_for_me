@@ -1,48 +1,76 @@
 import React, { useState } from 'react';
-import { ArrowLeft, Send, Sparkles } from 'lucide-react';
+import { X, Camera, Sparkles, ChevronLeft, Trash2 } from 'lucide-react';
 
 export default function RecordMealScreen({ onBack }) {
   const [text, setText] = useState('');
+  const [time, setTime] = useState('15:30');
 
   return (
-    <div className="flex flex-col h-full bg-white z-50">
-      <header className="px-5 py-4 flex justify-between items-center border-b border-slate-100">
-        <button onClick={onBack} className="p-2 -ml-2 text-slate-500 hover:bg-slate-50 rounded-full">
-          <ArrowLeft size={24} />
+    <div className="absolute inset-0 bg-[#f6f8f7] z-50 flex flex-col h-full">
+      <header className="px-5 py-4 flex items-center justify-between bg-white sticky top-0 z-10 border-b border-slate-100">
+        <button onClick={onBack} className="w-10 h-10 flex items-center justify-center -ml-2 text-slate-700">
+          <ChevronLeft size={24} />
         </button>
-        <h1 className="text-lg font-bold text-slate-800">오후 간식 기록</h1>
+        <h2 className="text-lg font-bold text-slate-800">식단 기록하기</h2>
         <div className="w-10"></div>
       </header>
 
-      <div className="flex-1 overflow-y-auto p-5">
-        <div className="bg-[#13ec92]/10 rounded-2xl p-4 mb-6 flex gap-3 items-start border border-[#13ec92]/20">
-          <Sparkles className="text-emerald-600 flex-shrink-0 mt-0.5" size={20} />
-          <div>
-            <p className="text-sm font-bold text-emerald-800 mb-1">AI 코치의 가이드</p>
-            <p className="text-xs text-emerald-700 leading-relaxed">
-              지금은 1주차 위장관 휴식 기간이에요. 단백질 쉐이크를 드셨나요? 드신 음식의 이름을 적어주시면 제가 분석해드릴게요!
-            </p>
+      <div className="flex-1 overflow-y-auto hide-scrollbar p-5">
+        <div className="bg-white rounded-3xl p-5 shadow-sm border border-slate-100 mb-6">
+          <div className="flex items-center gap-2 mb-4">
+            <div className="w-8 h-8 rounded-full bg-[#13ec92]/20 flex items-center justify-center text-emerald-600">
+              <Sparkles size={16} />
+            </div>
+            <span className="font-bold text-slate-700">AI 코치</span>
           </div>
+          <p className="text-sm text-slate-600 leading-relaxed">
+            오후 간식 시간이네요! 어떤 쉐이크를 드셨나요?<br/>
+            사진을 찍거나 텍스트로 자유롭게 남겨주세요.
+          </p>
         </div>
 
         <div className="mb-6">
-          <label className="block text-sm font-bold text-slate-700 mb-2">무엇을 드셨나요?</label>
+          <label className="block text-sm font-bold text-slate-700 mb-2 ml-1">섭취 시간</label>
+          <input 
+            type="time" 
+            value={time}
+            onChange={(e) => setTime(e.target.value)}
+            className="w-full bg-white border border-slate-200 rounded-2xl p-4 text-lg font-bold text-slate-700 focus:outline-none focus:border-[#13ec92] transition-colors"
+          />
+        </div>
+
+        <div className="bg-white rounded-3xl p-2 shadow-sm border border-slate-100 mb-6">
           <textarea 
             value={text}
             onChange={(e) => setText(e.target.value)}
-            placeholder="예: 단백질 쉐이크 1컵, 아몬드 5알"
-            className="w-full bg-slate-50 border border-slate-200 rounded-2xl p-4 text-sm focus:outline-none focus:border-[#13ec92] focus:bg-white transition-colors min-h-[120px] resize-none"
-          />
+            placeholder="예: 아몬드 브리즈에 초코맛 쉐이크 타먹었어요"
+            className="w-full h-32 resize-none p-4 text-slate-700 placeholder:text-slate-400 focus:outline-none text-sm"
+          ></textarea>
+          <div className="flex justify-between items-center p-2 border-t border-slate-50">
+            <button className="w-10 h-10 rounded-full bg-slate-50 flex items-center justify-center text-slate-500 hover:bg-slate-100 transition-colors">
+              <Camera size={20} />
+            </button>
+            <span className="text-xs font-medium text-slate-400 mr-2">{text.length} / 100</span>
+          </div>
         </div>
       </div>
 
-      <div className="p-5 border-t border-slate-100 bg-white">
+      <div className="p-5 border-t border-slate-100 bg-white space-y-3 pb-8">
         <button 
           onClick={onBack}
-          className={`w-full py-4 rounded-2xl font-bold text-lg flex items-center justify-center gap-2 transition-transform active:scale-95 ${text.length > 0 ? 'bg-[#13ec92] text-slate-900 hover:bg-[#10d482]' : 'bg-slate-100 text-slate-400'}`}
+          className={`w-full py-4 rounded-2xl font-bold text-lg flex items-center justify-center gap-2 transition-transform active:scale-95 ${
+            text.length > 0 ? 'bg-[#13ec92] text-slate-900 hover:bg-[#10d482]' : 'bg-slate-100 text-slate-400'
+          }`}
         >
           <Sparkles size={20} />
           AI 분석 및 기록하기
+        </button>
+        <button 
+          onClick={onBack}
+          className="w-full py-3 rounded-2xl font-bold text-sm text-slate-400 hover:text-rose-500 hover:bg-rose-50 transition-colors flex items-center justify-center gap-1.5"
+        >
+          <Trash2 size={16} />
+          이 기록 삭제하기
         </button>
       </div>
     </div>

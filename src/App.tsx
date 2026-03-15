@@ -80,6 +80,10 @@ export default function App() {
           from { transform: translateY(100%); }
           to { transform: translateY(0); }
         }
+        @keyframes scaleIn {
+          from { transform: scale(0.95); opacity: 0; }
+          to { transform: scale(1); opacity: 1; }
+        }
       `}} />
     </div>
   );
