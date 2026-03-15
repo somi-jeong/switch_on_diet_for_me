@@ -56,6 +56,13 @@ export default function MyScreen({ onNavigate }) {
             <span className="font-medium text-slate-700 text-sm">챌린지 기간</span>
             <span className="text-sm font-bold text-slate-800">총 28일</span>
           </div>
+          <button onClick={() => onNavigate('diet-history')} className="w-full p-4 flex justify-between items-center border-b border-slate-50 hover:bg-slate-50 transition-colors">
+            <div className="flex items-center gap-2">
+              <Calendar size={18} className="text-slate-400" />
+              <span className="font-medium text-slate-700 text-sm">식단 및 수면 기록 보기</span>
+            </div>
+            <ChevronRight size={18} className="text-slate-300" />
+          </button>
           <button onClick={() => onNavigate('history')} className="w-full p-4 flex justify-between items-center border-b border-slate-50 hover:bg-slate-50 transition-colors">
             <div className="flex items-center gap-2">
               <History size={18} className="text-slate-400" />

@@ -12,10 +12,11 @@ import MyScreen from './screens/MyScreen';
 import RecordMealScreen from './screens/RecordMealScreen';
 import ChatScreen from './screens/ChatScreen';
 import HistoryScreen from './screens/HistoryScreen';
+import DietHistoryScreen from './screens/DietHistoryScreen';
 
 export default function App() {
   const [activeTab, setActiveTab] = useState('home');
-  const [activeScreen, setActiveScreen] = useState('main'); // 'main', 'record', 'chat', 'history'
+  const [activeScreen, setActiveScreen] = useState('main'); // 'main', 'record', 'chat', 'history', 'diet-history'
 
   const navigateTo = (screen: string) => setActiveScreen(screen);
   const goBack = () => setActiveScreen('main');
@@ -25,6 +26,7 @@ export default function App() {
       {activeScreen === 'record' && <RecordMealScreen onBack={goBack} />}
       {activeScreen === 'chat' && <ChatScreen onBack={goBack} />}
       {activeScreen === 'history' && <HistoryScreen onBack={goBack} />}
+      {activeScreen === 'diet-history' && <DietHistoryScreen onBack={goBack} />}
 
       {activeScreen === 'main' && (
         <>
