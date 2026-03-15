@@ -66,12 +66,18 @@ export default function CalendarScreen({ onNavigate }) {
     },
     3: { 
       title: '3일차 데일리 총평', 
+      text: '어제는 식단과 수면 모두 완벽했어요! 이대로만 쭉 유지해볼까요?', 
+      type: 'good',
+      status: 'perfect',
+      missed: []
+    },
+    4: { 
+      title: '4일차 데일리 총평', 
       text: '오늘 기상 시간이 조금 늦었지만, 식단은 완벽하게 지켜주셨어요! 내일부터는 점심에 일반식이 허용됩니다.', 
       type: 'good',
       status: 'normal',
       missed: ['기상 시간 지연']
-    },
-    4: null
+    }
   };
 
   const currentMeals = mockMeals[selectedDay] || [];
@@ -292,7 +298,7 @@ export default function CalendarScreen({ onNavigate }) {
                     currentFeedback.status === 'normal' ? 'text-blue-800' : 
                     'text-rose-700'
                   }`}>
-                    AI 코치 피드백
+                    {currentFeedback.title || 'AI 코치 피드백'}
                   </h4>
                 </div>
                 <span className={`text-[10px] font-black px-2 py-1 rounded-md ${

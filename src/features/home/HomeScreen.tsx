@@ -640,12 +640,12 @@ export default function HomeScreen({ onNavigate }) {
                 </div>
               )}
 
-              {getSleepDuration(missedBedtime, wakeTime) < 6 && (
+              {getSleepDuration(missedBedtime, wakeTime).totalMins < 360 && (
                 <div className="bg-amber-50 rounded-2xl p-4 mb-6 border border-amber-100">
                   <div className="flex items-center gap-2 mb-2">
                     <AlertTriangle size={16} className="text-amber-500" />
                     <span className="font-bold text-amber-700 text-sm">
-                      수면 부족 ({Math.floor(getSleepDuration(missedBedtime, wakeTime))}시간 {Math.round((getSleepDuration(missedBedtime, wakeTime) % 1) * 60)}분)
+                      수면 부족 ({getSleepDuration(missedBedtime, wakeTime).h}시간 {getSleepDuration(missedBedtime, wakeTime).m}분)
                     </span>
                   </div>
                   <p className="text-xs text-amber-600 leading-relaxed">
@@ -654,7 +654,7 @@ export default function HomeScreen({ onNavigate }) {
                 </div>
               )}
 
-              {!isTimeLate(wakeTime) && getSleepDuration(missedBedtime, wakeTime) >= 6 && (
+              {!isTimeLate(wakeTime) && getSleepDuration(missedBedtime, wakeTime).totalMins >= 360 && (
                 <p className="text-sm text-slate-500 mb-6 text-center">기상 시간에 맞춰 오늘의 식단 알림이 재조정됩니다.</p>
               )}
               
