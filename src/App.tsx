@@ -33,7 +33,7 @@ export default function App() {
           {/* Main Content Area */}
           <div className="flex-1 relative overflow-hidden">
             {activeTab === 'home' && <HomeScreen onNavigate={navigateTo} />}
-            {activeTab === 'calendar' && <CalendarScreen />}
+            {activeTab === 'calendar' && <CalendarScreen onNavigate={navigateTo} />}
             {activeTab === 'diet' && <DietScreen />}
             {activeTab === 'my' && <MyScreen onNavigate={navigateTo} />}
           </div>

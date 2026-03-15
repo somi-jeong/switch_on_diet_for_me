@@ -46,10 +46,7 @@ export default function RecordMealScreen({ onBack }) {
             placeholder="예: 아몬드 브리즈에 초코맛 쉐이크 타먹었어요"
             className="w-full h-32 resize-none p-4 text-slate-700 placeholder:text-slate-400 focus:outline-none text-sm"
           ></textarea>
-          <div className="flex justify-between items-center p-2 border-t border-slate-50">
-            <button className="w-10 h-10 rounded-full bg-slate-50 flex items-center justify-center text-slate-500 hover:bg-slate-100 transition-colors">
-              <Camera size={20} />
-            </button>
+          <div className="flex justify-end items-center p-2 border-t border-slate-50">
             <span className="text-xs font-medium text-slate-400 mr-2">{text.length} / 100</span>
           </div>
         </div>

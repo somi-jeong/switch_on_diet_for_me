@@ -1,8 +1,21 @@
 import React from 'react';
-import { ChevronLeft, Calendar as CalendarIcon, Moon, Sun, CheckCircle2, AlertTriangle, Utensils } from 'lucide-react';
+import { ChevronLeft, Calendar as CalendarIcon, Moon, Sun, CheckCircle2, AlertTriangle, Utensils, MinusCircle } from 'lucide-react';
 
 export default function DietHistoryScreen({ onBack }) {
   const historyData = [
+    {
+      date: '2026.03.14 (금)',
+      day: '1주차 3일째',
+      wakeUp: '13:00',
+      bedtime: '02:00',
+      fasting: '11h 00m',
+      meals: [
+        { type: '아침', time: '-', status: 'skipped', text: '기상 지연으로 스킵' },
+        { type: '점심', time: '13:30', status: 'good', text: '단백질 쉐이크' },
+        { type: '간식', time: '17:00', status: 'good', text: '단백질 쉐이크' },
+        { type: '저녁', time: '20:00', status: 'good', text: '단백질 쉐이크' },
+      ]
+    },
     {
       date: '2026.03.13 (목)',
       day: '1주차 2일째',
@@ -11,7 +24,7 @@ export default function DietHistoryScreen({ onBack }) {
       fasting: '14h 15m',
       meals: [
         { type: '아침', time: '08:00', status: 'good', text: '단백질 쉐이크' },
-        { type: '점심', time: '12:30', status: 'good', text: '단백질 쉐이크' },
+        { type: '점심', time: '12:30', status: 'violation', text: '단백질 쉐이크 + 떡볶이' },
         { type: '간식', time: '16:00', status: 'good', text: '단백질 쉐이크' },
         { type: '저녁', time: '19:00', status: 'warning', text: '단백질 쉐이크 + 아몬드 5알' },
       ]
@@ -84,18 +97,34 @@ export default function DietHistoryScreen({ onBack }) {
                 식단 기록
               </h4>
               {dayData.meals.map((meal, mIdx) => (
-                <div key={mIdx} className="flex items-center gap-3 bg-slate-50/50 rounded-xl p-3 border border-slate-50">
+                <div key={mIdx} className={`flex items-center gap-3 rounded-xl p-3 border ${meal.status === 'violation' ? 'bg-rose-50/50 border-rose-100' : meal.status === 'skipped' ? 'bg-slate-100/50 border-slate-200 opacity-70' : 'bg-slate-50/50 border-slate-50'}`}>
                   <div className="w-12 text-center">
-                    <p className="text-xs font-bold text-slate-600">{meal.type}</p>
+                    <p className={`text-xs font-bold ${meal.status === 'skipped' ? 'text-slate-400 line-through' : 'text-slate-600'}`}>{meal.type}</p>
                     <p className="text-[10px] font-medium text-slate-400">{meal.time}</p>
                   </div>
                   <div className="w-px h-8 bg-slate-200"></div>
                   <div className="flex-1">
-                    <p className="text-sm font-medium text-slate-700">{meal.text}</p>
+                    <p className={`text-sm font-medium ${meal.status === 'violation' ? 'text-rose-600' : meal.status === 'skipped' ? 'text-slate-500 line-through' : 'text-slate-700'}`}>{meal.text}</p>
+                    {meal.status === 'violation' && (
+                      <p className="text-[10px] font-bold text-rose-500 mt-1 flex items-center gap-1">
+                        <AlertTriangle size={10} />
+                        허용식품 아님
+                      </p>
+                    )}
+                    {meal.status === 'skipped' && (
+                      <p className="text-[10px] font-bold text-slate-500 mt-1 flex items-center gap-1">
+                        <MinusCircle size={10} />
+                        스킵됨
+                      </p>
+                    )}
                   </div>
                   <div>
                     {meal.status === 'good' ? (
                       <CheckCircle2 size={16} className="text-[#13ec92]" />
+                    ) : meal.status === 'violation' ? (
+                      <AlertTriangle size={16} className="text-rose-500" />
+                    ) : meal.status === 'skipped' ? (
+                      <MinusCircle size={16} className="text-slate-400" />
                     ) : (
                       <AlertTriangle size={16} className="text-amber-500" />
                     )}

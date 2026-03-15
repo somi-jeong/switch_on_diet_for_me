@@ -1,10 +1,10 @@
 import React, { useState } from 'react';
-import { Calendar, Sun, Check, MessageCircle, Sparkles, GlassWater, Moon, Lock, AlertTriangle, CheckCircle2, Timer, Utensils, ChevronDown } from 'lucide-react';
+import { Calendar, Sun, Check, MessageCircle, Sparkles, GlassWater, Moon, Lock, AlertTriangle, CheckCircle2, Timer, Utensils, ChevronDown, MinusCircle } from 'lucide-react';
 
 export default function HomeScreen({ onNavigate }) {
-  const [isWokenUp, setIsWokenUp] = useState(false);
+  const [isWokenUp, setIsWokenUp] = useState(true);
   const [isWakeTimeModalOpen, setIsWakeTimeModalOpen] = useState(false);
-  const [wakeTime, setWakeTime] = useState('07:00');
+  const [wakeTime, setWakeTime] = useState('13:00');
   const [isSkipDialogOpen, setIsSkipDialogOpen] = useState(false);
   const [mockCurrentTime, setMockCurrentTime] = useState('11:00');
   const [isForgotRecordDialogOpen, setIsForgotRecordDialogOpen] = useState(false);
@@ -198,42 +198,42 @@ export default function HomeScreen({ onNavigate }) {
               {/* Breakfast */}
               <div className="relative z-10 flex gap-4 mb-10">
                 <div className="flex flex-col items-center mt-1">
-                  <div className="w-10 h-10 rounded-full bg-[#13ec92] flex items-center justify-center text-slate-900 shadow-sm">
-                    <Check size={20} strokeWidth={3} />
+                  <div className="w-10 h-10 rounded-full bg-slate-200 flex items-center justify-center text-slate-500 shadow-sm">
+                    <MinusCircle size={20} strokeWidth={3} />
                   </div>
                 </div>
                 <div className="flex-1">
                   <div className="flex items-baseline justify-between mb-2">
                     <div className="flex items-baseline gap-2">
-                      <h3 className="text-lg font-bold text-slate-800">아침</h3>
-                      <span className="text-sm font-bold text-[#13ec92]">07:30</span>
+                      <h3 className="text-lg font-bold text-slate-400 line-through">아침</h3>
+                      <span className="text-sm font-bold text-slate-400">건너뜀</span>
                     </div>
                     <div className="flex items-center gap-2">
                       <button onClick={() => onNavigate('record')} className="text-[11px] font-bold text-slate-400 hover:text-slate-600 underline underline-offset-2">수정</button>
-                      <div className="flex items-center gap-1 bg-emerald-50 text-emerald-600 px-2 py-0.5 rounded text-[10px] font-bold border border-emerald-100">
-                        <CheckCircle2 size={12} />
-                        허용
+                      <div className="flex items-center gap-1 bg-slate-100 text-slate-500 px-2 py-0.5 rounded text-[10px] font-bold border border-slate-200">
+                        <MinusCircle size={12} />
+                        스킵됨
                       </div>
                     </div>
                   </div>
-                  <div className="bg-white rounded-3xl p-4 shadow-sm border border-slate-100">
+                  <div className="bg-slate-50 rounded-3xl p-4 border border-slate-100 opacity-80">
                     <div className="flex gap-3 mb-1">
-                      <div className="w-12 h-12 rounded-2xl bg-[#13ec92]/10 flex items-center justify-center text-emerald-600 flex-shrink-0">
+                      <div className="w-12 h-12 rounded-2xl bg-slate-200/50 flex items-center justify-center text-slate-400 flex-shrink-0">
                         <GlassWater size={24} />
                       </div>
                       <div className="flex flex-col justify-center">
-                        <span className="text-sm font-bold text-slate-800">단백질 쉐이크 1컵</span>
-                        <span className="text-xs text-slate-500">물 또는 무가당 두유</span>
+                        <span className="text-sm font-bold text-slate-500 line-through">단백질 쉐이크 1컵</span>
+                        <span className="text-xs text-slate-400">기상 지연으로 인한 스킵</span>
                       </div>
                     </div>
                     <div className="mt-3">
-                      <div className="bg-[#13ec92]/10 rounded-2xl rounded-tl-none p-3 relative flex flex-col justify-center">
+                      <div className="bg-slate-200/50 rounded-2xl rounded-tl-none p-3 relative flex flex-col justify-center border border-slate-200/50">
                         <div className="flex items-center gap-1 mb-1">
-                          <Sparkles size={14} className="text-emerald-600" />
-                          <span className="text-xs font-bold text-emerald-700">AI 코치</span>
+                          <Sparkles size={14} className="text-slate-500" />
+                          <span className="text-xs font-bold text-slate-600">AI 코치</span>
                         </div>
-                        <p className="text-[11px] text-slate-700 font-medium leading-relaxed">
-                          첫 쉐이크 잘 드셨어요! 👏 1~3일차는 탄수화물을 제한하는 중요한 시기예요. 너무 배가 고프면 플레인 요거트나 연두부를 조금 드셔도 좋아요.
+                        <p className="text-[11px] text-slate-600 font-medium leading-relaxed">
+                          기상 시간이 늦어 아침 식단을 건너뛰었습니다. 공복 시간을 유지하고 점심부터 스케줄에 맞춰 식사해주세요!
                         </p>
                       </div>
                     </div>
@@ -256,30 +256,30 @@ export default function HomeScreen({ onNavigate }) {
                     </div>
                     <div className="flex items-center gap-2">
                       <button onClick={() => onNavigate('record')} className="text-[11px] font-bold text-slate-400 hover:text-slate-600 underline underline-offset-2">수정</button>
-                      <div className="flex items-center gap-1 bg-amber-50 text-amber-600 px-2 py-0.5 rounded text-[10px] font-bold border border-amber-100">
+                      <div className="flex items-center gap-1 bg-rose-50 text-rose-600 px-2 py-0.5 rounded text-[10px] font-bold border border-rose-100">
                         <AlertTriangle size={12} />
-                        주의
+                        허용식품 아님
                       </div>
                     </div>
                   </div>
                   <div className="bg-white rounded-3xl p-4 shadow-sm border border-slate-100">
                     <div className="flex gap-3 mb-1">
-                      <div className="w-12 h-12 rounded-2xl bg-amber-100/50 flex items-center justify-center text-amber-600 flex-shrink-0">
+                      <div className="w-12 h-12 rounded-2xl bg-rose-100/50 flex items-center justify-center text-rose-600 flex-shrink-0">
                         <Utensils size={24} />
                       </div>
                       <div className="flex flex-col justify-center">
-                        <span className="text-sm font-bold text-slate-800">단백질 쉐이크 + 견과류 많이</span>
+                        <span className="text-sm font-bold text-slate-800">단백질 쉐이크 + 마카롱 1개</span>
                         <span className="text-xs text-slate-500">텍스트 입력됨</span>
                       </div>
                     </div>
                     <div className="mt-3">
-                      <div className="bg-amber-50 rounded-2xl rounded-tl-none p-3 relative flex flex-col justify-center border border-amber-100/50">
+                      <div className="bg-rose-50 rounded-2xl rounded-tl-none p-3 relative flex flex-col justify-center border border-rose-100/50">
                         <div className="flex items-center gap-1 mb-1">
-                          <Sparkles size={14} className="text-amber-600" />
-                          <span className="text-xs font-bold text-amber-700">AI 코치</span>
+                          <Sparkles size={14} className="text-rose-600" />
+                          <span className="text-xs font-bold text-rose-700">AI 코치</span>
                         </div>
                         <p className="text-[11px] text-slate-700 font-medium leading-relaxed">
-                          견과류는 2주차부터 허용되는 식품이에요. 1주차에는 위장관 휴식을 위해 가급적 피해주시는 것이 좋습니다. 다음 식사부터는 쉐이크에 집중해볼까요? 🥲
+                          앗! 마카롱은 당류가 높아 1주차에는 절대 피해야 할 식품이에요. 😭 당분이 들어오면 인슐린이 분비되어 지방 분해가 멈추게 됩니다. 다음 식사는 꼭 허용 식품으로만 구성해주세요!
                         </p>
                       </div>
                     </div>
