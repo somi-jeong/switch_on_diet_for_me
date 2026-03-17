@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Calendar, Sun, Check, MessageCircle, Sparkles, GlassWater, Moon, Lock, AlertTriangle, CheckCircle2, Timer, Utensils, ChevronDown, ChevronUp, MinusCircle, Pill, Activity } from 'lucide-react';
+import { Calendar, Sun, Check, MessageCircle, Sparkles, GlassWater, Moon, Lock, AlertTriangle, CheckCircle2, Timer, Utensils, ChevronDown, ChevronUp, MinusCircle, Pill, Activity, ChevronRight } from 'lucide-react';
 
 const CustomTimePicker = ({ value, onChange, isWarning = false, warningColor = 'rose' }) => {
   const [hour, setHour] = useState(parseInt(value.split(':')[0] || '07', 10));
@@ -111,6 +111,9 @@ export default function HomeScreen({ onNavigate }) {
   const [todayBedtime, setTodayBedtime] = useState('23:30');
   const [isLateBedtimeWarningOpen, setIsLateBedtimeWarningOpen] = useState(false);
   const [pendingBedtimeAction, setPendingBedtimeAction] = useState(null);
+  const [isFirstDay, setIsFirstDay] = useState(false);
+  const [firstDayBedtime, setFirstDayBedtime] = useState(null);
+  const [isFirstDayBedtimeModalOpen, setIsFirstDayBedtimeModalOpen] = useState(false);
   const [dailyChecklist, setDailyChecklist] = useState({
     water: false,
     supplements: false,
@@ -119,6 +122,7 @@ export default function HomeScreen({ onNavigate }) {
 
   // Calculate sleep duration
   const getSleepDuration = (bedTimeStr, wakeTimeStr) => {
+    if (!bedTimeStr) return { h: 0, m: 0, totalMins: 0 };
     let [bH, bM] = bedTimeStr.split(':').map(Number);
     let [wH, wM] = wakeTimeStr.split(':').map(Number);
     let bedMins = bH * 60 + bM;
@@ -130,7 +134,8 @@ export default function HomeScreen({ onNavigate }) {
     return { h, m, totalMins: diff };
   };
 
-  const sleepData = getSleepDuration('23:30', wakeTime); // Using mocked yesterday bedtime
+  const activeBedtime = isFirstDay ? (firstDayBedtime || '23:30') : missedBedtime;
+  const sleepData = getSleepDuration(activeBedtime, wakeTime);
   const isSleepValid = sleepData.totalMins >= 360; // 6 hours
 
   const toggleChecklist = (key) => {
@@ -139,6 +144,11 @@ export default function HomeScreen({ onNavigate }) {
 
   const isTimeLate = (timeStr) => {
     return timeStr > '09:00' || timeStr < '05:00';
+  };
+
+  const isExtremeLate = (timeStr) => {
+    const [h] = timeStr.split(':').map(Number);
+    return h >= 15; // 15:00 (3 PM) 이후 기상 시 극단적 지연으로 간주
   };
 
   const isBedtimeLate = (timeStr) => {
@@ -168,6 +178,9 @@ export default function HomeScreen({ onNavigate }) {
           </button>
           <button onClick={() => setHasMissedBedtime(!hasMissedBedtime)} className="text-xs bg-slate-200 text-slate-600 px-3 py-1 rounded-full font-medium">
             어제 취침 누락: {hasMissedBedtime ? 'ON' : 'OFF'}
+          </button>
+          <button onClick={() => setIsFirstDay(!isFirstDay)} className="text-xs bg-slate-200 text-slate-600 px-3 py-1 rounded-full font-medium">
+            1일차 모드: {isFirstDay ? 'ON' : 'OFF'}
           </button>
         </div>
 
@@ -341,24 +354,48 @@ export default function HomeScreen({ onNavigate }) {
 
               <div className="w-full h-px bg-slate-100"></div>
 
-              <div className="w-full flex items-center justify-between py-2">
-                <div className="flex items-center gap-3">
-                  <div className={`w-10 h-10 rounded-2xl flex items-center justify-center transition-colors ${isSleepValid ? 'bg-indigo-100 text-indigo-500' : 'bg-rose-100 text-rose-500'}`}>
-                    <Moon size={20} />
+              {isFirstDay && !firstDayBedtime ? (
+                <button 
+                  onClick={() => setIsFirstDayBedtimeModalOpen(true)}
+                  className="w-full flex items-center justify-between py-2 group"
+                >
+                  <div className="flex items-center gap-3">
+                    <div className="w-10 h-10 rounded-2xl bg-indigo-50 flex items-center justify-center text-indigo-400 group-hover:bg-indigo-100 group-hover:text-indigo-500 transition-colors">
+                      <Moon size={20} />
+                    </div>
+                    <div className="text-left">
+                      <p className="text-sm font-bold text-slate-700 group-hover:text-indigo-600 transition-colors">
+                        전날 취침 시간 입력하기
+                      </p>
+                      <p className="text-xs text-slate-400">
+                        정확한 수면 시간 계산을 위해 필요해요
+                      </p>
+                    </div>
                   </div>
-                  <div className="text-left">
-                    <p className={`text-sm font-bold ${isSleepValid ? 'text-slate-800' : 'text-rose-600'}`}>
-                      수면 {sleepData.h}시간 {sleepData.m}분 (자동 기록)
-                    </p>
-                    <p className="text-xs text-slate-400">
-                      {isSleepValid ? '최소 6시간 수면 달성! 🌙' : '수면 시간이 6시간 미만이에요 💦'}
-                    </p>
+                  <div className="w-6 h-6 rounded-full border-2 border-slate-200 flex items-center justify-center text-slate-300 group-hover:border-indigo-300 group-hover:text-indigo-400 transition-colors">
+                    <ChevronRight size={14} strokeWidth={3} />
+                  </div>
+                </button>
+              ) : (
+                <div className="w-full flex items-center justify-between py-2">
+                  <div className="flex items-center gap-3">
+                    <div className={`w-10 h-10 rounded-2xl flex items-center justify-center transition-colors ${isSleepValid ? 'bg-indigo-100 text-indigo-500' : 'bg-rose-100 text-rose-500'}`}>
+                      <Moon size={20} />
+                    </div>
+                    <div className="text-left">
+                      <p className={`text-sm font-bold ${isSleepValid ? 'text-slate-800' : 'text-rose-600'}`}>
+                        수면 {sleepData.h}시간 {sleepData.m}분 {isFirstDay ? '(직접 기록)' : '(자동 기록)'}
+                      </p>
+                      <p className="text-xs text-slate-400">
+                        {isSleepValid ? '최소 6시간 수면 달성! 🌙' : '수면 시간이 6시간 미만이에요 💦'}
+                      </p>
+                    </div>
+                  </div>
+                  <div className={`w-6 h-6 rounded-full border-2 flex items-center justify-center ${isSleepValid ? 'bg-indigo-500 border-indigo-500 text-white' : 'bg-rose-500 border-rose-500 text-white'}`}>
+                    {isSleepValid ? <Check size={14} strokeWidth={3} /> : <AlertTriangle size={14} strokeWidth={3} />}
                   </div>
                 </div>
-                <div className={`w-6 h-6 rounded-full border-2 flex items-center justify-center ${isSleepValid ? 'bg-indigo-500 border-indigo-500 text-white' : 'bg-rose-500 border-rose-500 text-white'}`}>
-                  {isSleepValid ? <Check size={14} strokeWidth={3} /> : <AlertTriangle size={14} strokeWidth={3} />}
-                </div>
-              </div>
+              )}
             </div>
           </section>
         )}
@@ -392,6 +429,99 @@ export default function HomeScreen({ onNavigate }) {
                 </div>
               ))}
             </div>
+          ) : isExtremeLate(wakeTime) ? (
+            <>
+              {/* Extreme Late Schedule */}
+              <div className="relative z-10 flex gap-4 mb-10">
+                <div className="flex flex-col items-center mt-1">
+                  <div className="w-10 h-10 rounded-full bg-rose-100 flex items-center justify-center text-rose-500 shadow-sm">
+                    <AlertTriangle size={20} strokeWidth={3} />
+                  </div>
+                </div>
+                <div className="flex-1">
+                  <div className="flex items-baseline justify-between mb-2">
+                    <div className="flex items-baseline gap-2">
+                      <h3 className="text-lg font-bold text-slate-800">정규 식단 취소</h3>
+                    </div>
+                  </div>
+                  <div className="bg-rose-50 rounded-3xl p-4 border border-rose-100 opacity-90">
+                    <div className="flex gap-3 mb-1">
+                      <div className="w-12 h-12 rounded-2xl bg-rose-200/50 flex items-center justify-center text-rose-500 flex-shrink-0">
+                        <MinusCircle size={24} />
+                      </div>
+                      <div className="flex flex-col justify-center">
+                        <span className="text-sm font-bold text-slate-700 line-through">아침, 점심, 간식</span>
+                        <span className="text-xs text-rose-500">기상 지연으로 인한 스킵</span>
+                      </div>
+                    </div>
+                    <div className="mt-3">
+                      <div className="bg-rose-100/50 rounded-2xl rounded-tl-none p-3 relative flex flex-col justify-center border border-rose-200/50">
+                        <div className="flex items-center gap-1 mb-1">
+                          <Sparkles size={14} className="text-rose-500" />
+                          <span className="text-xs font-bold text-rose-600">AI 코치</span>
+                        </div>
+                        <p className="text-[11px] text-rose-700 font-medium leading-relaxed">
+                          기상 시간이 너무 늦어 오늘의 정규 식단 스케줄이 취소되었습니다. 무리하게 식사를 몰아서 하지 마세요!
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              {/* Dinner (Only Meal) */}
+              <div className="relative z-10 flex gap-4 mb-10">
+                <div className="flex flex-col items-center mt-1">
+                  <div className="w-10 h-10 rounded-full bg-white border-[3px] border-[#13ec92] flex items-center justify-center shadow-sm relative">
+                    <div className="w-3 h-3 rounded-full bg-[#13ec92] animate-pulse"></div>
+                    <div className="absolute inset-0 rounded-full bg-[#13ec92]/20 animate-ping" style={{ animationDuration: '2s' }}></div>
+                  </div>
+                </div>
+                <div className="flex-1">
+                  <div className="flex items-baseline gap-2 mb-2">
+                    <h3 className="text-lg font-bold text-slate-800">가벼운 저녁</h3>
+                    <span className="text-sm font-bold text-slate-500">기상 후 1~2시간 내</span>
+                  </div>
+                  <div className="bg-white rounded-3xl p-5 shadow-sm border border-[#13ec92]/30 relative overflow-hidden">
+                    <div className="absolute top-0 right-0 w-32 h-32 bg-gradient-to-br from-[#13ec92]/10 to-transparent rounded-bl-full"></div>
+                    <div className="relative z-10">
+                      <p className="text-sm font-semibold text-slate-700 mb-4">단백질 쉐이크 1잔만 가볍게 섭취하세요.</p>
+                      <div className="flex gap-2">
+                        <button onClick={() => onNavigate('record')} className="flex-1 bg-[#13ec92] hover:bg-[#10d482] text-slate-900 font-bold py-3 rounded-2xl flex items-center justify-center gap-1.5 transition-transform active:scale-95 text-sm">
+                          <Check size={16} />
+                          기록하기
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              {/* Bedtime */}
+              <div className="relative z-10 flex gap-4">
+                <div className="flex flex-col items-center mt-1">
+                  <div className="w-10 h-10 rounded-full bg-indigo-100 flex items-center justify-center text-indigo-500 shadow-sm">
+                    <Moon size={20} />
+                  </div>
+                </div>
+                <div className="flex-1">
+                  <div className="flex items-baseline gap-2 mb-2">
+                    <h3 className="text-lg font-bold text-slate-800">취침</h3>
+                    <span className="text-sm font-bold text-slate-500">23:00 목표</span>
+                  </div>
+                  <div className="bg-white rounded-3xl p-5 shadow-sm border border-indigo-100 relative overflow-hidden">
+                    <div className="absolute top-0 right-0 w-32 h-32 bg-gradient-to-br from-indigo-100/50 to-transparent rounded-bl-full"></div>
+                    <div className="relative z-10">
+                      <p className="text-sm font-semibold text-slate-700 mb-4">충분한 수면은 필수!<br/>밤 12시 이전 취침을 권장해요.</p>
+                      <button onClick={() => setIsTodayBedtimeModalOpen(true)} className="w-full bg-indigo-50 hover:bg-indigo-100 text-indigo-600 font-bold py-3 rounded-2xl flex items-center justify-center gap-1.5 transition-transform active:scale-95 text-sm">
+                        <Check size={16} />
+                        취침 기록하기
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </>
           ) : (
             <>
               {/* Breakfast */}
@@ -576,32 +706,64 @@ export default function HomeScreen({ onNavigate }) {
           {/* AI Feedback Section (Today) */}
           {isWokenUp && (
             <div className="mt-8 mb-6">
-              <div className="bg-blue-50 border border-blue-100 rounded-3xl p-6 relative overflow-hidden shadow-sm">
-                <div className="absolute -right-10 -top-10 w-32 h-32 bg-blue-500/10 rounded-full blur-2xl"></div>
-                <div className="relative z-10">
-                  <div className="flex items-center justify-between mb-4">
-                    <div className="flex items-center gap-2">
-                      <Sparkles size={20} className="text-blue-600" />
-                      <h3 className="text-lg font-black text-blue-900">오늘의 AI 코치 피드백</h3>
-                    </div>
-                    <span className="text-[10px] font-black px-2.5 py-1.5 rounded-lg bg-blue-100 text-blue-700">
-                      보통 (일부 누락) 👍
-                    </span>
-                  </div>
-                  <p className="text-sm leading-relaxed text-blue-800 font-medium mb-4">
-                    오늘 기상 시간이 조금 늦었지만, 식단은 완벽하게 지켜주셨어요! 내일부터는 점심에 일반식이 허용됩니다.
-                  </p>
-                  
-                  <div className="pt-4 border-t border-blue-200/50">
-                    <p className="text-xs font-bold text-blue-700/70 mb-2">현재 놓치고 있는 규칙</p>
-                    <div className="flex flex-wrap gap-2">
-                      <span className="text-[11px] font-bold bg-white text-slate-600 px-3 py-1.5 rounded-lg shadow-sm border border-slate-100">
-                        기상 시간 지연
+              {isExtremeLate(wakeTime) ? (
+                <div className="bg-rose-50 border border-rose-100 rounded-3xl p-6 relative overflow-hidden shadow-sm">
+                  <div className="absolute -right-10 -top-10 w-32 h-32 bg-rose-500/10 rounded-full blur-2xl"></div>
+                  <div className="relative z-10">
+                    <div className="flex items-center justify-between mb-4">
+                      <div className="flex items-center gap-2">
+                        <Sparkles size={20} className="text-rose-600" />
+                        <h3 className="text-lg font-black text-rose-900">오늘의 AI 코치 피드백</h3>
+                      </div>
+                      <span className="text-[10px] font-black px-2.5 py-1.5 rounded-lg bg-rose-100 text-rose-700">
+                        최악 (다수 위반) 🚨
                       </span>
+                    </div>
+                    <p className="text-sm leading-relaxed text-rose-800 font-medium mb-4">
+                      기상 시간이 너무 늦어 생체 리듬이 완전히 깨졌어요 😭 오늘은 정규 식단을 무리하게 진행하기보다, 가볍게 단백질 쉐이크만 섭취하고 일찍 주무시는 것을 목표로 해주세요!
+                    </p>
+                    
+                    <div className="pt-4 border-t border-rose-200/50">
+                      <p className="text-xs font-bold text-rose-700/70 mb-2">현재 놓치고 있는 규칙</p>
+                      <div className="flex flex-wrap gap-2">
+                        <span className="text-[11px] font-bold bg-white text-slate-600 px-3 py-1.5 rounded-lg shadow-sm border border-slate-100">
+                          기상 시간 심각한 지연
+                        </span>
+                        <span className="text-[11px] font-bold bg-white text-slate-600 px-3 py-1.5 rounded-lg shadow-sm border border-slate-100">
+                          식단 스킵 (시간 부족)
+                        </span>
+                      </div>
                     </div>
                   </div>
                 </div>
-              </div>
+              ) : (
+                <div className="bg-blue-50 border border-blue-100 rounded-3xl p-6 relative overflow-hidden shadow-sm">
+                  <div className="absolute -right-10 -top-10 w-32 h-32 bg-blue-500/10 rounded-full blur-2xl"></div>
+                  <div className="relative z-10">
+                    <div className="flex items-center justify-between mb-4">
+                      <div className="flex items-center gap-2">
+                        <Sparkles size={20} className="text-blue-600" />
+                        <h3 className="text-lg font-black text-blue-900">오늘의 AI 코치 피드백</h3>
+                      </div>
+                      <span className="text-[10px] font-black px-2.5 py-1.5 rounded-lg bg-blue-100 text-blue-700">
+                        보통 (일부 누락) 👍
+                      </span>
+                    </div>
+                    <p className="text-sm leading-relaxed text-blue-800 font-medium mb-4">
+                      오늘 기상 시간이 조금 늦었지만, 식단은 완벽하게 지켜주셨어요! 내일부터는 점심에 일반식이 허용됩니다.
+                    </p>
+                    
+                    <div className="pt-4 border-t border-blue-200/50">
+                      <p className="text-xs font-bold text-blue-700/70 mb-2">현재 놓치고 있는 규칙</p>
+                      <div className="flex flex-wrap gap-2">
+                        <span className="text-[11px] font-bold bg-white text-slate-600 px-3 py-1.5 rounded-lg shadow-sm border border-slate-100">
+                          기상 시간 지연
+                        </span>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              )}
             </div>
           )}
         </section>
@@ -749,6 +911,40 @@ export default function HomeScreen({ onNavigate }) {
             </div>
           </div>
         )}
+        {/* First Day Bedtime Modal */}
+        {isFirstDayBedtimeModalOpen && (
+          <div className="absolute inset-0 z-50 flex flex-col justify-end">
+            <div 
+              className="absolute inset-0 bg-slate-900/40 backdrop-blur-sm transition-opacity" 
+              onClick={() => setIsFirstDayBedtimeModalOpen(false)}
+            ></div>
+            <div className="bg-white rounded-t-3xl p-6 relative z-10 shadow-2xl animate-[slideUp_0.3s_ease-out]">
+              <div className="w-12 h-1.5 bg-slate-200 rounded-full mx-auto mb-6"></div>
+              <div className="flex items-center gap-2 mb-2">
+                <Moon size={20} className="text-indigo-500" />
+                <h3 className="text-xl font-black text-slate-800">전날 취침 시간 입력</h3>
+              </div>
+              
+              <p className="text-sm text-slate-500 mb-6 text-center">정확한 수면 시간 계산을 위해 어제 몇 시에 주무셨는지 알려주세요.</p>
+              
+              <CustomTimePicker 
+                value={firstDayBedtime || '23:30'} 
+                onChange={setFirstDayBedtime} 
+                isWarning={false} 
+                warningColor="indigo"
+              />
+              
+              <div className="flex gap-3">
+                <button onClick={() => setIsFirstDayBedtimeModalOpen(false)} className="flex-1 py-4 bg-slate-100 text-slate-600 rounded-2xl font-bold text-sm">취소</button>
+                <button onClick={() => {
+                  if (!firstDayBedtime) setFirstDayBedtime('23:30');
+                  setIsFirstDayBedtimeModalOpen(false);
+                }} className="flex-[2] py-4 bg-indigo-500 text-white rounded-2xl font-bold text-sm shadow-sm">입력 완료</button>
+              </div>
+            </div>
+          </div>
+        )}
+
         {/* Missed Bedtime Modal */}
         {isMissedBedtimeModalOpen && (
           <div className="absolute inset-0 z-50 flex flex-col justify-end">
