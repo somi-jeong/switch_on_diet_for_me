@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Calendar, Sun, Check, MessageCircle, Sparkles, GlassWater, Moon, Lock, AlertTriangle, CheckCircle2, Timer, Utensils, ChevronDown, ChevronUp, MinusCircle, Pill, Activity, ChevronRight } from 'lucide-react';
+import { Calendar, Sun, Check, MessageCircle, Sparkles, GlassWater, Moon, Lock, AlertTriangle, CheckCircle2, Timer, Utensils, ChevronDown, ChevronUp, MinusCircle, Pill, Activity, ChevronRight, X } from 'lucide-react';
 
 const CustomTimePicker = ({ value, onChange, isWarning = false, warningColor = 'rose' }) => {
   const [hour, setHour] = useState(parseInt(value.split(':')[0] || '07', 10));
@@ -96,6 +96,70 @@ const CustomTimePicker = ({ value, onChange, isWarning = false, warningColor = '
   );
 };
 
+const RecordMealModal = ({ isOpen, onClose, onSave, mealName, defaultTime }) => {
+  const [text, setText] = useState('');
+  const [time, setTime] = useState(defaultTime);
+  const [isLateRecord, setIsLateRecord] = useState(false);
+
+  if (!isOpen) return null;
+
+  return (
+    <div className="fixed inset-0 bg-slate-900/40 backdrop-blur-sm z-50 flex items-end justify-center sm:items-center">
+      <div className="bg-white w-full max-w-md rounded-t-3xl sm:rounded-3xl p-6 shadow-xl animate-slide-up">
+        <div className="flex justify-between items-center mb-6">
+          <h2 className="text-xl font-bold text-slate-800">{mealName} 기록하기</h2>
+          <button onClick={onClose} className="p-2 bg-slate-100 rounded-full text-slate-500 hover:bg-slate-200 transition-colors">
+            <X size={20} />
+          </button>
+        </div>
+        
+        <div className="space-y-4 mb-6">
+          <div>
+            <label className="block text-sm font-bold text-slate-700 mb-2">섭취 시간</label>
+            <input 
+              type="time" 
+              value={time}
+              onChange={(e) => setTime(e.target.value)}
+              className="w-full bg-slate-50 border border-slate-200 rounded-2xl p-4 text-lg font-bold text-slate-700 focus:outline-none focus:border-[#13ec92] transition-colors"
+            />
+          </div>
+          
+          <div>
+            <label className="block text-sm font-bold text-slate-700 mb-2">무엇을 드셨나요?</label>
+            <textarea 
+              value={text}
+              onChange={(e) => setText(e.target.value)}
+              placeholder="예: 단백질 쉐이크와 아몬드 5알 (금지식품 예: 마카롱, 라면, 과자 등)"
+              className="w-full h-24 resize-none bg-slate-50 border border-slate-200 rounded-2xl p-4 text-sm text-slate-700 placeholder:text-slate-400 focus:outline-none focus:border-[#13ec92] transition-colors"
+            />
+          </div>
+
+          <label className="flex items-center gap-2 p-3 bg-slate-50 rounded-xl border border-slate-100 cursor-pointer">
+            <input 
+              type="checkbox" 
+              checked={isLateRecord}
+              onChange={(e) => setIsLateRecord(e.target.checked)}
+              className="w-5 h-5 rounded border-slate-300 text-[#13ec92] focus:ring-[#13ec92]"
+            />
+            <span className="text-sm font-medium text-slate-700">식사 후 한참 뒤에 기록하는 중입니다 (뒤늦게 기록)</span>
+          </label>
+        </div>
+
+        <button 
+          onClick={() => onSave(text, time, isLateRecord)}
+          disabled={!text.trim()}
+          className={`w-full py-4 rounded-2xl font-bold text-lg flex items-center justify-center gap-2 transition-transform active:scale-95 ${
+            text.trim() ? 'bg-[#13ec92] text-slate-900 hover:bg-[#10d482]' : 'bg-slate-100 text-slate-400 cursor-not-allowed'
+          }`}
+        >
+          <Sparkles size={20} />
+          AI 분석 및 기록하기
+        </button>
+      </div>
+    </div>
+  );
+};
+
 export default function HomeScreen({ onNavigate }) {
   const [isWokenUp, setIsWokenUp] = useState(true);
   const [isWakeTimeModalOpen, setIsWakeTimeModalOpen] = useState(false);
@@ -114,6 +178,10 @@ export default function HomeScreen({ onNavigate }) {
   const [isFirstDay, setIsFirstDay] = useState(false);
   const [firstDayBedtime, setFirstDayBedtime] = useState(null);
   const [isFirstDayBedtimeModalOpen, setIsFirstDayBedtimeModalOpen] = useState(false);
+  const [snackRecord, setSnackRecord] = useState(null);
+  const [isRecordModalOpen, setIsRecordModalOpen] = useState(false);
+  const [snackbarMessage, setSnackbarMessage] = useState('');
+  const [snackbarType, setSnackbarType] = useState('success');
   const [dailyChecklist, setDailyChecklist] = useState({
     water: false,
     supplements: false,
@@ -153,6 +221,38 @@ export default function HomeScreen({ onNavigate }) {
 
   const isBedtimeLate = (timeStr) => {
     return timeStr >= '00:00' && timeStr <= '05:00';
+  };
+
+  const handleSaveMeal = (text, time, isLateRecord) => {
+    const forbiddenWords = ['마카롱', '과자', '빵', '라면', '술', '맥주', '아이스크림', '초콜릿', '떡볶이', '당', '설탕', '액상과당', '치킨', '피자'];
+    const isForbidden = forbiddenWords.some(word => text.includes(word));
+    
+    let feedback = '';
+    let snackbarMsg = '';
+    let snackType = 'success';
+
+    if (isForbidden) {
+      feedback = `앗! '${text}'에는 금지된 식품이 포함되어 있어요. 😭 당분이 들어오면 인슐린이 분비되어 지방 분해가 멈추게 됩니다. 다음 식사는 꼭 허용 식품으로만 구성해주세요!`;
+      snackbarMsg = '🚨 금지 식품이 감지되었습니다! AI 코치 피드백을 확인해주세요.';
+      snackType = 'error';
+    } else {
+      if (isLateRecord) {
+        feedback = '기록을 잊지 않고 해주셨네요! 다음부터는 식사 직후에 기록하면 더 정확한 코칭을 받을 수 있어요. 허용 식품으로 잘 드셨습니다!';
+        snackbarMsg = '✅ 늦었지만 식단 기록이 완료되었습니다.';
+        snackType = 'warning';
+      } else {
+        feedback = '잘하셨어요! 허용 식품으로 건강하게 간식을 드셨네요. 남은 하루도 화이팅입니다!';
+        snackbarMsg = '✅ 식단 기록이 완료되었습니다.';
+        snackType = 'success';
+      }
+    }
+
+    setSnackRecord({ text, time, isForbidden, feedback, isLateRecord });
+    setIsRecordModalOpen(false);
+    
+    setSnackbarMessage(snackbarMsg);
+    setSnackbarType(snackType);
+    setTimeout(() => setSnackbarMessage(''), 4000);
   };
 
   const isCurrentLate = isTimeLate(mockCurrentTime);
@@ -619,31 +719,88 @@ export default function HomeScreen({ onNavigate }) {
               {/* Snack */}
               <div className="relative z-10 flex gap-4 mb-10">
                 <div className="flex flex-col items-center mt-1">
-                  <div className="w-10 h-10 rounded-full bg-white border-[3px] border-[#13ec92] flex items-center justify-center shadow-sm relative">
-                    <div className="w-3 h-3 rounded-full bg-[#13ec92] animate-pulse"></div>
-                    <div className="absolute inset-0 rounded-full bg-[#13ec92]/20 animate-ping" style={{ animationDuration: '2s' }}></div>
-                  </div>
+                  {snackRecord ? (
+                    <div className={`w-10 h-10 rounded-full flex items-center justify-center shadow-sm ${snackRecord.isForbidden ? 'bg-rose-100 text-rose-500' : 'bg-[#13ec92] text-slate-900'}`}>
+                      {snackRecord.isForbidden ? <AlertTriangle size={20} strokeWidth={3} /> : <Check size={20} strokeWidth={3} />}
+                    </div>
+                  ) : (
+                    <div className="w-10 h-10 rounded-full bg-white border-[3px] border-[#13ec92] flex items-center justify-center shadow-sm relative">
+                      <div className="w-3 h-3 rounded-full bg-[#13ec92] animate-pulse"></div>
+                      <div className="absolute inset-0 rounded-full bg-[#13ec92]/20 animate-ping" style={{ animationDuration: '2s' }}></div>
+                    </div>
+                  )}
                 </div>
                 <div className="flex-1">
-                  <div className="flex items-baseline gap-2 mb-2">
-                    <h3 className="text-lg font-bold text-slate-800">오후 간식</h3>
-                    <span className="text-sm font-bold text-slate-500">15:30 예정</span>
+                  <div className="flex items-baseline justify-between mb-2">
+                    <div className="flex items-baseline gap-2">
+                      <h3 className="text-lg font-bold text-slate-800">오후 간식</h3>
+                      <span className={`text-sm font-bold ${snackRecord ? (snackRecord.isForbidden ? 'text-rose-500' : 'text-[#13ec92]') : 'text-slate-500'}`}>
+                        {snackRecord ? snackRecord.time : '15:30 예정'}
+                      </span>
+                    </div>
+                    {snackRecord && (
+                      <div className="flex items-center gap-2">
+                        <button onClick={() => setIsRecordModalOpen(true)} className="text-[11px] font-bold text-slate-400 hover:text-slate-600 underline underline-offset-2">수정</button>
+                        {snackRecord.isForbidden ? (
+                          <div className="flex items-center gap-1 bg-rose-50 text-rose-600 px-2 py-0.5 rounded text-[10px] font-bold border border-rose-100">
+                            <AlertTriangle size={12} />
+                            허용식품 아님
+                          </div>
+                        ) : snackRecord.isLateRecord ? (
+                          <div className="flex items-center gap-1 bg-amber-50 text-amber-600 px-2 py-0.5 rounded text-[10px] font-bold border border-amber-100">
+                            <Timer size={12} />
+                            뒤늦게 기록
+                          </div>
+                        ) : (
+                          <div className="flex items-center gap-1 bg-[#13ec92]/10 text-emerald-600 px-2 py-0.5 rounded text-[10px] font-bold border border-[#13ec92]/20">
+                            <CheckCircle2 size={12} />
+                            기록 완료
+                          </div>
+                        )}
+                      </div>
+                    )}
                   </div>
-                  <div className="bg-white rounded-3xl p-5 shadow-sm border border-[#13ec92]/30 relative overflow-hidden">
-                    <div className="absolute top-0 right-0 w-32 h-32 bg-gradient-to-br from-[#13ec92]/10 to-transparent rounded-bl-full"></div>
-                    <div className="relative z-10">
-                      <p className="text-sm font-semibold text-slate-700 mb-4">간식 쉐이크 드실 시간이에요.</p>
-                      <div className="flex gap-2">
-                        <button onClick={() => onNavigate('record')} className="flex-1 bg-[#13ec92] hover:bg-[#10d482] text-slate-900 font-bold py-3 rounded-2xl flex items-center justify-center gap-1.5 transition-transform active:scale-95 text-sm">
-                          <Check size={16} />
-                          기록하기
-                        </button>
-                        <button onClick={() => setIsSkipDialogOpen(true)} className="px-4 bg-slate-100 hover:bg-slate-200 text-slate-500 font-bold py-3 rounded-2xl flex items-center justify-center transition-transform active:scale-95 text-sm">
-                          스킵
-                        </button>
+                  
+                  {snackRecord ? (
+                    <div className="bg-white rounded-3xl p-4 shadow-sm border border-slate-100">
+                      <div className="flex gap-3 mb-1">
+                        <div className={`w-12 h-12 rounded-2xl flex items-center justify-center flex-shrink-0 ${snackRecord.isForbidden ? 'bg-rose-100/50 text-rose-600' : 'bg-emerald-50 text-emerald-600'}`}>
+                          <Utensils size={24} />
+                        </div>
+                        <div className="flex flex-col justify-center">
+                          <span className="text-sm font-bold text-slate-800">{snackRecord.text}</span>
+                          <span className="text-xs text-slate-500">텍스트 입력됨</span>
+                        </div>
+                      </div>
+                      <div className="mt-3">
+                        <div className={`rounded-2xl rounded-tl-none p-3 relative flex flex-col justify-center border ${snackRecord.isForbidden ? 'bg-rose-50 border-rose-100/50' : snackRecord.isLateRecord ? 'bg-amber-50 border-amber-100/50' : 'bg-emerald-50 border-emerald-100/50'}`}>
+                          <div className="flex items-center gap-1 mb-1">
+                            <Sparkles size={14} className={snackRecord.isForbidden ? 'text-rose-600' : snackRecord.isLateRecord ? 'text-amber-600' : 'text-emerald-600'} />
+                            <span className={`text-xs font-bold ${snackRecord.isForbidden ? 'text-rose-700' : snackRecord.isLateRecord ? 'text-amber-700' : 'text-emerald-700'}`}>AI 코치</span>
+                          </div>
+                          <p className={`text-[11px] font-medium leading-relaxed ${snackRecord.isForbidden ? 'text-slate-700' : 'text-slate-700'}`}>
+                            {snackRecord.feedback}
+                          </p>
+                        </div>
                       </div>
                     </div>
-                  </div>
+                  ) : (
+                    <div className="bg-white rounded-3xl p-5 shadow-sm border border-[#13ec92]/30 relative overflow-hidden">
+                      <div className="absolute top-0 right-0 w-32 h-32 bg-gradient-to-br from-[#13ec92]/10 to-transparent rounded-bl-full"></div>
+                      <div className="relative z-10">
+                        <p className="text-sm font-semibold text-slate-700 mb-4">간식 쉐이크 드실 시간이에요.</p>
+                        <div className="flex gap-2">
+                          <button onClick={() => setIsRecordModalOpen(true)} className="flex-1 bg-[#13ec92] hover:bg-[#10d482] text-slate-900 font-bold py-3 rounded-2xl flex items-center justify-center gap-1.5 transition-transform active:scale-95 text-sm">
+                            <Check size={16} />
+                            기록하기
+                          </button>
+                          <button onClick={() => setIsSkipDialogOpen(true)} className="px-4 bg-slate-100 hover:bg-slate-200 text-slate-500 font-bold py-3 rounded-2xl flex items-center justify-center transition-transform active:scale-95 text-sm">
+                            스킵
+                          </button>
+                        </div>
+                      </div>
+                    </div>
+                  )}
                 </div>
               </div>
 
@@ -1085,6 +1242,30 @@ export default function HomeScreen({ onNavigate }) {
           </div>
         )}
       </div>
+
+      <RecordMealModal 
+        isOpen={isRecordModalOpen} 
+        onClose={() => setIsRecordModalOpen(false)} 
+        onSave={handleSaveMeal} 
+        mealName="오후 간식" 
+        defaultTime="15:30" 
+      />
+
+      {snackbarMessage && (
+        <div className="fixed bottom-24 left-1/2 -translate-x-1/2 w-[90%] max-w-sm z-50 animate-slide-up">
+          <div className={`rounded-2xl p-4 shadow-lg flex items-center gap-3 ${
+            snackbarType === 'error' ? 'bg-rose-600 text-white' : 
+            snackbarType === 'warning' ? 'bg-amber-500 text-white' : 
+            'bg-slate-800 text-white'
+          }`}>
+            {snackbarType === 'error' ? <AlertTriangle size={20} /> : <CheckCircle2 size={20} />}
+            <p className="text-sm font-medium flex-1">{snackbarMessage}</p>
+            <button onClick={() => setSnackbarMessage('')} className="text-white/70 hover:text-white">
+              <X size={16} />
+            </button>
+          </div>
+        </div>
+      )}
     </>
   );
 }
