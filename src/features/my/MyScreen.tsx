@@ -102,6 +102,14 @@ export default function MyScreen({ onNavigate }) {
           <RotateCcw size={16} />
           데이터 초기화
         </button>
+
+        {/* Developer Mode Button */}
+        <button 
+          onClick={() => onNavigate('developer')}
+          className="w-full mt-4 py-4 bg-slate-100 text-slate-500 text-sm font-bold rounded-2xl hover:bg-slate-200 transition-colors flex items-center justify-center gap-2"
+        >
+          <span>🔧</span> 개발자 모드
+        </button>
       </div>
 
       {/* Reset Dialog */}

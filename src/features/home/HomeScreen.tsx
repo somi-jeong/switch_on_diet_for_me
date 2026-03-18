@@ -520,24 +520,27 @@ export default function HomeScreen({ onNavigate }) {
                   </div>
                 </button>
               ) : (
-                <div className="w-full flex items-center justify-between py-2">
+                <button 
+                  onClick={() => isFirstDay ? setIsFirstDayBedtimeModalOpen(true) : setIsMissedBedtimeModalOpen(true)}
+                  className="w-full flex items-center justify-between py-2 group"
+                >
                   <div className="flex items-center gap-3">
-                    <div className={`w-10 h-10 rounded-2xl flex items-center justify-center transition-colors ${isSleepValid ? 'bg-indigo-100 text-indigo-500' : 'bg-rose-100 text-rose-500'}`}>
+                    <div className={`w-10 h-10 rounded-2xl flex items-center justify-center transition-colors ${isSleepValid ? 'bg-indigo-100 text-indigo-500 group-hover:bg-indigo-200' : 'bg-rose-100 text-rose-500 group-hover:bg-rose-200'}`}>
                       <Moon size={20} />
                     </div>
                     <div className="text-left">
-                      <p className={`text-sm font-bold ${isSleepValid ? 'text-slate-800' : 'text-rose-600'}`}>
-                        수면 {sleepData.h}시간 {sleepData.m}분 {isFirstDay ? '(직접 기록)' : '(자동 기록)'}
+                      <p className={`text-sm font-bold transition-colors ${isSleepValid ? 'text-slate-800 group-hover:text-indigo-600' : 'text-rose-600 group-hover:text-rose-700'}`}>
+                        수면 {sleepData.h}시간 {sleepData.m}분 <span className="text-xs font-normal text-slate-400 ml-1 underline underline-offset-2">수정</span>
                       </p>
                       <p className="text-xs text-slate-400">
                         {isSleepValid ? '최소 6시간 수면 달성! 🌙' : '수면 시간이 6시간 미만이에요 💦'}
                       </p>
                     </div>
                   </div>
-                  <div className={`w-6 h-6 rounded-full border-2 flex items-center justify-center ${isSleepValid ? 'bg-indigo-500 border-indigo-500 text-white' : 'bg-rose-500 border-rose-500 text-white'}`}>
-                    {isSleepValid ? <Check size={14} strokeWidth={3} /> : <AlertTriangle size={14} strokeWidth={3} />}
+                  <div className={`w-6 h-6 rounded-full border-2 flex items-center justify-center transition-colors ${isSleepValid ? 'bg-indigo-500 border-indigo-500 text-white group-hover:bg-indigo-600 group-hover:border-indigo-600' : 'bg-rose-500 border-rose-500 text-white group-hover:bg-rose-600 group-hover:border-rose-600'}`}>
+                    <ChevronRight size={14} strokeWidth={3} />
                   </div>
-                </div>
+                </button>
               )}
             </div>
           </section>

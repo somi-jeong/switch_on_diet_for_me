@@ -12,6 +12,7 @@ import RecordMealScreen from './features/diet/RecordMealScreen';
 import ChatScreen from './features/chat/ChatScreen';
 import HistoryScreen from './features/history/HistoryScreen';
 import DietHistoryScreen from './features/diet/DietHistoryScreen';
+import DeveloperModeScreen from './features/developer/DeveloperModeScreen';
 import BottomNav from './components/layout/BottomNav';
 
 import SetupScreen from './features/setup/SetupScreen';
@@ -36,6 +37,7 @@ export default function App() {
       {activeScreen === 'chat' && <ChatScreen onBack={goBack} />}
       {activeScreen === 'history' && <HistoryScreen onBack={goBack} />}
       {activeScreen === 'diet-history' && <DietHistoryScreen onBack={goBack} />}
+      {activeScreen === 'developer' && <DeveloperModeScreen onBack={goBack} />}
 
       {activeScreen === 'main' && (
         <>
