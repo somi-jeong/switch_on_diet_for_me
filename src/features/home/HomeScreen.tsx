@@ -307,6 +307,15 @@ export default function HomeScreen({ onNavigate }) {
           <button onClick={() => setIsWokenUp(!isWokenUp)} className="text-xs bg-slate-200 text-slate-600 px-3 py-1 rounded-full font-medium">
             테스트: {isWokenUp ? '기상 전으로' : '기상 후로'}
           </button>
+          <button onClick={() => {
+            setMissedBedtime('02:00');
+            setWakeTime('06:00');
+            setIsWokenUp(true);
+            setHasMissedBedtime(false);
+            setIsFirstDay(false);
+          }} className="text-xs bg-amber-100 text-amber-700 px-3 py-1 rounded-full font-medium">
+            테스트: 수면부족 (새벽2시~6시)
+          </button>
           <button onClick={() => setMockCurrentTime(mockCurrentTime === '07:00' ? '11:00' : '07:00')} className="text-xs bg-slate-200 text-slate-600 px-3 py-1 rounded-full font-medium">
             현재시간: {mockCurrentTime}
           </button>
@@ -991,6 +1000,37 @@ export default function HomeScreen({ onNavigate }) {
                         </span>
                         <span className="text-[11px] font-bold bg-white text-slate-600 px-3 py-1.5 rounded-lg shadow-sm border border-slate-100">
                           식단 스킵 (시간 부족)
+                        </span>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              ) : isBedtimeLate(missedBedtime) && getSleepDuration(missedBedtime, wakeTime).totalMins < 360 ? (
+                <div className="bg-amber-50 border border-amber-100 rounded-3xl p-6 relative overflow-hidden shadow-sm">
+                  <div className="absolute -right-10 -top-10 w-32 h-32 bg-amber-500/10 rounded-full blur-2xl"></div>
+                  <div className="relative z-10">
+                    <div className="flex items-center justify-between mb-4">
+                      <div className="flex items-center gap-2">
+                        <Sparkles size={20} className="text-amber-600" />
+                        <h3 className="text-lg font-black text-amber-900">오늘의 AI 코치 피드백</h3>
+                      </div>
+                      <span className="text-[10px] font-black px-2.5 py-1.5 rounded-lg bg-amber-100 text-amber-700">
+                        경고 (수면 패턴 붕괴) 🚨
+                      </span>
+                    </div>
+                    <p className="text-sm leading-relaxed text-amber-800 font-medium mb-4">
+                      새벽 {missedBedtime.split(':')[0].replace(/^0/, '')}시에 주무셨네요! 자정부터 새벽 4시 사이는 지방 분해 호르몬이 가장 활발한 시간인데, 이 황금 시간대를 놓치셨어요 😭<br/><br/>
+                      게다가 총 수면 시간도 {getSleepDuration(missedBedtime, wakeTime).h}시간으로 권장 수면 시간(6시간)에 한참 못 미쳐요. 오늘은 가짜 배고픔이 심할 수 있으니 물을 자주 드시고, 오늘 밤은 꼭 자정 전에 주무세요!
+                    </p>
+                    
+                    <div className="pt-4 border-t border-amber-200/50">
+                      <p className="text-xs font-bold text-amber-700/70 mb-2">현재 놓치고 있는 규칙</p>
+                      <div className="flex flex-wrap gap-2">
+                        <span className="text-[11px] font-bold bg-white text-slate-600 px-3 py-1.5 rounded-lg shadow-sm border border-slate-100">
+                          수면 골든타임 놓침
+                        </span>
+                        <span className="text-[11px] font-bold bg-white text-slate-600 px-3 py-1.5 rounded-lg shadow-sm border border-slate-100">
+                          수면 시간 부족 (6시간 미만)
                         </span>
                       </div>
                     </div>
